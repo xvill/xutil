@@ -28,7 +28,7 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 }
 
 // Sqlldr 执行成功返回入库记录数,失败则保留log和data到baddir
-func Sqlldr(timeflag, userid, data, control, baddir, loadeddir string) (
+func Sqlldr(timeflag, userid, data, control, baddir string) (
 	rows, badrows int, output []byte, err error) {
 	if control == "" {
 		control = fmt.Sprintf("%s.ctl", data)
