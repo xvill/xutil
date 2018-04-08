@@ -13,7 +13,7 @@ import (
 )
 
 // CsvWriteALL 生成CSV
-func CsvWriteALL(wfile string, data [][]string, comma rune) error {
+func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 	wf, err := os.Create(wfile)
 	if err != nil {
 		return err
