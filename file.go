@@ -29,7 +29,7 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 
 // Sqlldr 执行成功返回入库记录数,失败则保留log和data到baddir
 func Sqlldr(timeflag, userid, data, control, baddir string) (
-	rows, badrows int, output []byte, err error) {
+	rows, badrows int, err error) {
 	if control == "" {
 		control = fmt.Sprintf("%s.ctl", data)
 	}
@@ -38,18 +38,23 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 	badfile := fmt.Sprintf("%s/%s.%s.bad", baddir, path.Base(data), timeflag)
 
 	cmd := fmt.Sprintf("sqlldr userid=%s data=%s control=%s log=%s bad=%s", userid, data, control, logfile, badfile)
-	output, err = exec.Command("bash", "-c", cmd).CombinedOutput()
+	cmdout, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	rows, badrows, _ = sqlldrLog(logfile)
 
 	// 保留入库文件策略
 	if err == nil { // 执行成功
 		os.Remove(logfile)
 		os.Remove(data)
-	} else if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
-		os.Remove(data)
+	} else {
+		if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
+			os.Remove(data)
+		}
+		return rows, badrows, errors.New(string(cmdout))
 	}
-	return
+
+	return rows, badrows, nil
 }
+
 
 
 //sqlldrLog 从sqlldr的log文件中获取入库记录数
