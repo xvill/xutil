@@ -37,11 +37,12 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 	logfile := fmt.Sprintf("%s/%s.%s.log", baddir, path.Base(data), timeflag)
 	badfile := fmt.Sprintf("%s/%s.%s.bad", baddir, path.Base(data), timeflag)
 
+	var cmdout []byte
 	cmd := fmt.Sprintf("sqlldr userid=%s data=%s control=%s log=%s bad=%s", userid, data, control, logfile, badfile)
 	if runtime.GOOS == "windows" {
-		cmdout, err := exec.Command("cmd", "/C", cmd).CombinedOutput()
+		cmdout, err = exec.Command("cmd", "/C", cmd).CombinedOutput()
 	} else {
-		cmdout, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+		cmdout, err = exec.Command("bash", "-c", cmd).CombinedOutput()
 	}
 	rows, badrows, _ = sqlldrLog(logfile)
 
