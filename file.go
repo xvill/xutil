@@ -38,7 +38,11 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 	badfile := fmt.Sprintf("%s/%s.%s.bad", baddir, path.Base(data), timeflag)
 
 	cmd := fmt.Sprintf("sqlldr userid=%s data=%s control=%s log=%s bad=%s", userid, data, control, logfile, badfile)
-	cmdout, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+	if runtime.GOOS == "windows" {
+		cmdout, err := exec.Command("cmd", "/C", cmd).CombinedOutput()
+	} else {
+		cmdout, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+	}
 	rows, badrows, _ = sqlldrLog(logfile)
 
 	// 保留入库文件策略
