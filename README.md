@@ -3,6 +3,37 @@
 ## install
 go get -u github.com/xvill/xtools
 
+
+## demo
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/xvill/xtools"
+)
+
+func main() {
+	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
+	g.ReserveLngLat()
+	g.Wgs2gcj()
+	fmt.Println(g)
+
+	wktstr := []string{
+		"POINT(1,2)",
+		"LINESTRING(3 4,10 50,20 25)",
+		"POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))",
+		"MULTIPOINT(3.5 5.6,4.8 10.5)",
+		"MULTILINESTRING((3 4,10 50,20 25),(-5 -8,-10 -8,-15 -4))",
+		"MULTIPOLYGON(((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2)),((3 3,6 2,6 4,3 3)))",
+	}
+	for _, s := range wktstr {
+		g, _ := xtools.FromWKT(s)
+		fmt.Println(g.GeoJSON())
+	}
+}
+```
 ## function
 
 ```go
