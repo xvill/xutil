@@ -58,4 +58,7 @@ func Wgs2bd(lat, lon float64) (float64, float64) {...}
 // EarthDistance 两经纬度距离
 func EarthDistance(lat1, lng1, lat2, lng2 float64) float64{...}
 
+// ToFixed 浮点数保留
+func ToFixed(f float64, n int) float64 {...}
+
 ```
