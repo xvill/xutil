@@ -8,7 +8,9 @@ import "math"
 	BD-09：百度坐标偏移标准(BaiduMap)
 
 	http://www.gpsspg.com/maps.htm 坐标拾取
+	http://lbs.amap.com/console/show/picker 高德坐标拾取
 	http://api.map.baidu.com/lbsapi/getpoint/index.html 百度坐标拾取
+	https://github.com/wandergis/coordtransform  javascript版本
 */
 const (
 	_pi  = 3.14159265358979324    //圆周率
@@ -37,7 +39,7 @@ func Wgs2gcj(lat, lon float64) (float64, float64) {
 	dLon = (dLon * 180.0) / (_a / sqrtMagic * math.Cos(radLat) * _pi)
 	mgLat := lat + dLat
 	mgLon := lon + dLon
-	return mgLat, mgLon
+	return ToFixed(mgLat, 7), ToFixed(mgLon, 7)
 }
 
 // Gcj2bd  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
@@ -47,7 +49,7 @@ func Gcj2bd(lat, lon float64) (float64, float64) {
 	theta := math.Atan2(y, x) + 0.000003*math.Cos(x*_xpi)
 	bdLon := z*math.Cos(theta) + 0.0065
 	bdLat := z*math.Sin(theta) + 0.006
-	return bdLat, bdLon
+	return ToFixed(bdLat, 7), ToFixed(bdLon, 7)
 }
 
 // Bd2gcj  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
@@ -57,14 +59,14 @@ func Bd2gcj(lat, lon float64) (float64, float64) {
 	theta := math.Atan2(y, x) - 0.000003*math.Cos(x*_xpi)
 	ggLon := z * math.Cos(theta)
 	ggLat := z * math.Sin(theta)
-	return ggLat, ggLon
+	return ToFixed(ggLat, 7), ToFixed(ggLon, 7)
 }
 
 // Wgs2bd WGS坐标系 ----> 百度坐标系
 func Wgs2bd(lat, lon float64) (float64, float64) {
 	x, y := Wgs2gcj(lat, lon)
 	lat, lng := Gcj2bd(x, y)
-	return math.Trunc(lat*1000000) / 1000000, math.Trunc(lng*1000000) / 1000000
+	return lat, lng
 }
 
 // EarthDistance 两经纬度距离
@@ -77,6 +79,13 @@ func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
 	return EarthRadius *
 		math.Acos(math.Sin(lat1)*math.Sin(lat2)+
 			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
+}
+
+// ToFixed 浮点数保留
+func ToFixed(f float64, n int) float64 {
+	shift := math.Pow(10, float64(n))
+	fv := 0.0000000001 + f //对浮点数产生.xxx999999999 计算不准进行处理
+	return math.Floor(fv*shift+.5) / shift
 }
 
 // func main() {
