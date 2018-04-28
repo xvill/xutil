@@ -5,8 +5,7 @@ go get -u github.com/xvill/xtools
 
 ## function
 
-```
-// file.go
+```go
 // CsvWriteALL 生成CSV
 func CsvWriteALL(data [][]string, wfile string, comma rune) error 
 
