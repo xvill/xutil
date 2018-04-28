@@ -65,6 +65,55 @@ func FromWKT(wkt string) (Geo, error) {
 	return Geo{Type: _type, Coords: v}, err
 }
 
+// FromGeoJSON 解析GeoJSON为Geo
+func FromGeoJSON(geojson string) (g Geo, err error) {
+	type GeoJSON struct {
+		Type   string          `json:"type"`
+		Coords json.RawMessage `json:"coordinates"`
+	}
+
+	var gj GeoJSON
+	err = json.Unmarshal([]byte(geojson), &gj)
+	if err != nil {
+		return g, err
+	}
+
+	g.Coords = [][][][]float64{{{{}}}}
+	g.Type = strings.NewReplacer("POINT", "Point", "LINESTRING", "LineString", "MULTILINESTRING", "MultiLineString",
+		"POLYGON", "Polygon", "MULTIPOLYGON", "MultiPolygon", "MULTIPOINT", "MultiPoint").Replace(strings.ToUpper(gj.Type))
+
+	var v4 [][][][]float64
+	err = json.Unmarshal(gj.Coords, &v4)
+	if err == nil {
+		g.Coords = v4
+		return
+	}
+
+	var v3 [][][]float64
+	err = json.Unmarshal(gj.Coords, &v3)
+	if err == nil {
+		g.Coords[0] = v3
+		return
+	}
+
+	var v2 [][]float64
+	err = json.Unmarshal(gj.Coords, &v2)
+	if err == nil {
+		g.Coords[0][0] = v2
+		return
+	}
+
+	var v1 []float64
+	err = json.Unmarshal(gj.Coords, &v1)
+	if err == nil {
+		g.Coords[0][0][0] = v1
+		return
+	}
+
+	return
+
+}
+
 // GeoJSON 生成GeoJSON
 func (g Geo) GeoJSON() (s string, err error) {
 	var b []byte
@@ -76,7 +125,8 @@ func (g Geo) GeoJSON() (s string, err error) {
 	case "MultiPolygon":
 		b, err = json.Marshal(g.Coords)
 	}
-	return fmt.Sprintf(`{"type":"%s","coordinates":"%s"}`, g.Type, string(b)), err
+	s = fmt.Sprintf(`{"type":"%s","coordinates":"%s"}`, g.Type, string(b))
+	return s, err
 
 }
 func (g Geo) String() (wkt string) {
