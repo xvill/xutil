@@ -21,7 +21,7 @@ func main() {
 	fmt.Println(g)
 
 	wktstr := []string{
-		"POINT(1,2)",
+		"POINT(1 2)",
 		"LINESTRING(3 4,10 50,20 25)",
 		"POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))",
 		"MULTIPOINT(3.5 5.6,4.8 10.5)",
