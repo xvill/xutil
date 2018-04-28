@@ -13,16 +13,16 @@ type Geo struct {
 	Coords [][][][]float64
 }
 
-func WKTToGeoJSON(wkt string) (_type, _coordinates string) {
-	str := strings.NewReplacer("(", " [ ", ")", " ] ", ",", " , ").Replace(wkt)
-
-	bf := bufio.NewScanner(strings.NewReader(str))
+// FromWKT 解析WKT为Geo
+func FromWKT(wkt string) (g Geo, err error) {
+	wkt = strings.NewReplacer("(", " [ ", ")", " ] ", ",", " , ").Replace(wkt)
+	bf := bufio.NewScanner(strings.NewReader(wkt))
 	bf.Split(bufio.ScanWords)
 
 	var retstr bytes.Buffer
 	flag := false
 	bf.Scan()
-	_type = bf.Text()
+	_type := bf.Text()
 	for bf.Scan() {
 		w := bf.Text()
 		if flag && w != "[" && w != "]" && w != "," {
@@ -39,34 +39,17 @@ func WKTToGeoJSON(wkt string) (_type, _coordinates string) {
 			flag = false
 		}
 	}
-	_coordinates = retstr.String()
-	// _type = strings.ToUpper(_type)
+	_coordinates := retstr.String()
 	_type = strings.NewReplacer("POINT", "Point", "LINESTRING", "LineString", "MULTILINESTRING", "MultiLineString",
 		"POLYGON", "Polygon", "MULTIPOLYGON", "MultiPolygon", "MULTIPOINT", "MultiPoint").Replace(strings.ToUpper(_type))
 
-	return
-}
-
-// FromWKT 解析WKT为Geo
-func FromWKT(wkt string) (Geo, error) {
-	_type, _coordinates := WKTToGeoJSON(wkt)
-	_coords := ""
-	switch _type {
-	case "Point", "LineString", "MultiPoint":
-		_coords = fmt.Sprintf("[[%s]]", _coordinates)
-	case "Polygon", "MultiLineString":
-		_coords = fmt.Sprintf("[%s]", _coordinates)
-	case "MultiPolygon":
-		_coords = _coordinates
-	}
-
-	var v [][][][]float64
-	err := json.Unmarshal([]byte(_coords), &v)
-	return Geo{Type: _type, Coords: v}, err
+	rawjson := fmt.Sprintf(`{"type":"%s","coordinates":%s}`, _type, _coordinates)
+	return FromGeoJSON(rawjson)
 }
 
 // FromGeoJSON 解析GeoJSON为Geo
 func FromGeoJSON(geojson string) (g Geo, err error) {
+
 	type GeoJSON struct {
 		Type   string          `json:"type"`
 		Coords json.RawMessage `json:"coordinates"`
@@ -118,7 +101,9 @@ func FromGeoJSON(geojson string) (g Geo, err error) {
 func (g Geo) GeoJSON() (s string, err error) {
 	var b []byte
 	switch g.Type {
-	case "Point", "LineString", "MultiPoint":
+	case "Point":
+		b, err = json.Marshal(g.Coords[0][0][0])
+	case "LineString", "MultiPoint":
 		b, err = json.Marshal(g.Coords[0][0])
 	case "Polygon", "MultiLineString":
 		b, err = json.Marshal(g.Coords[0])
