@@ -6,17 +6,16 @@ go get -u github.com/xvill/xtools
 ## function
 
 ```go
-CsvWriteALL 生成CSV
+// CsvWriteALL 生成CSV
 func CsvWriteALL(data [][]string, wfile string, comma rune) error 
-Sqlldr 执行成功返回入库记录数,失败则保留log和data到baddir
+// Sqlldr 执行成功返回入库记录数,失败则保留log和data到baddir
 func Sqlldr(timeflag, userid, data, control, baddir string) (rows, badrows int, err error) 
-IsFileExist 文件是否存在
+// IsFileExist 文件是否存在
 func IsFileExist(path string) (isExist, isDir bool, err error) 
 ```
 
 
-```
-// geo.go
+```go
 // FromWKT 解析WKT为Geo
 func FromWKT(wkt string) (Geo, error)
 
@@ -43,8 +42,7 @@ func (g Geo) Box() []float64
 ```
 
 
-```
-// gis.go
+```go
 // Wgs2gcj WGS坐标系 ----> GCJ坐标系
 func Wgs2gcj(lat, lon float64) (float64, float64)
 
