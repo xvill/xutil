@@ -47,6 +47,7 @@ func WKTToGeoJSON(wkt string) (_type, _coordinates string) {
 	return
 }
 
+// FromWKT 解析WKT为Geo
 func FromWKT(wkt string) (Geo, error) {
 	_type, _coordinates := WKTToGeoJSON(wkt)
 	_coords := ""
@@ -64,6 +65,7 @@ func FromWKT(wkt string) (Geo, error) {
 	return Geo{Type: _type, Coords: v}, err
 }
 
+// GeoJSON 生成GeoJSON
 func (g Geo) GeoJSON() (s string, err error) {
 	var b []byte
 	switch g.Type {
@@ -81,6 +83,7 @@ func (g Geo) String() (wkt string) {
 	return g.ToWKT()
 }
 
+// ToWKT 生成WKT
 func (g Geo) ToWKT() (wkt string) {
 	coords := g.Coords
 	var points, polygon, multipolygon []string
@@ -113,6 +116,7 @@ func (g Geo) ToWKT() (wkt string) {
 	return
 }
 
+// ReserveLngLat 转换Lat,Lng 位置
 func (g Geo) ReserveLngLat() {
 	coords := g.Coords
 	for _, a := range coords {
@@ -124,6 +128,7 @@ func (g Geo) ReserveLngLat() {
 	}
 }
 
+// Wgs2gcj 经纬度坐标系转换 wgs-> gcj
 func (g Geo) Wgs2gcj() {
 	coords := g.Coords
 	for _, a := range coords {
@@ -134,6 +139,8 @@ func (g Geo) Wgs2gcj() {
 		}
 	}
 }
+
+// Gcj2bd 经纬度坐标系转换 gcj->BD09
 func (g Geo) Gcj2bd() {
 	coords := g.Coords
 	for _, a := range coords {
@@ -145,6 +152,7 @@ func (g Geo) Gcj2bd() {
 	}
 }
 
+// Wgs2bd 经纬度坐标系转换 wgs->BD09
 func (g Geo) Wgs2bd() {
 	coords := g.Coords
 	for _, a := range coords {
@@ -156,6 +164,7 @@ func (g Geo) Wgs2bd() {
 	}
 }
 
+// Box 方框边界 minx, miny, maxx, maxy
 func (g Geo) Box() []float64 {
 	coords := g.Coords
 	minx, miny, maxx, maxy := coords[0][0][0][0], coords[0][0][0][1], coords[0][0][0][0], coords[0][0][0][1]
