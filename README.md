@@ -1,5 +1,7 @@
 # xtools
 
+## install
+go get -u github.com/xvill/xtools
 
 ## function
 
