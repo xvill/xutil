@@ -46,18 +46,19 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 		cmdout, err = exec.Command("bash", "-c", cmd).CombinedOutput()
 	}
 	rows, badrows, _ = sqlldrLog(logfile)
-
+	
 	// 保留入库文件策略
+	if err != nil && badrows <= 0 { //执行失败
+		return rows, badrows, errors.New(string(cmdout))
+	}
 	if err == nil { // 执行成功
 		os.Remove(logfile)
 		os.Remove(data)
-		return rows, badrows, nil
 	}
 	if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
 		os.Remove(data)
-		return rows, badrows, nil
 	}
-	return rows, badrows, errors.New(string(cmdout)) //执行失败
+	return rows, badrows, nil
 }
 
 //sqlldrLog 从sqlldr的log文件中获取入库记录数
