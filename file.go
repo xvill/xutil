@@ -51,17 +51,14 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 	if err == nil { // 执行成功
 		os.Remove(logfile)
 		os.Remove(data)
-	} else {
-		if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
-			os.Remove(data)
-		}
-		return rows, badrows, errors.New(string(cmdout))
+		return rows, badrows, nil
 	}
-
-	return rows, badrows, nil
+	if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
+		os.Remove(data)
+		return rows, badrows, nil
+	}
+	return rows, badrows, errors.New(string(cmdout)) //执行失败
 }
-
-
 
 //sqlldrLog 从sqlldr的log文件中获取入库记录数
 func sqlldrLog(name string) (rows, badrows int, err error) {
