@@ -151,7 +151,7 @@ func (g Geo) ToWKT() (wkt string) {
 }
 
 // ReserveLngLat 转换Lat,Lng 位置
-func (g Geo) ReserveLngLat() {
+func (g Geo) ReverseLngLat() {
 	coords := g.Coords
 	for _, a := range coords {
 		for _, b := range a {
