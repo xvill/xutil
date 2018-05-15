@@ -1,4 +1,4 @@
-package xtools
+package xutil
 
 import "math"
 
