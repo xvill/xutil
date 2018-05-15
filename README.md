@@ -1,10 +1,10 @@
-# xtools
+# xutil
 
 ## install
 go get -u github.com/xvill/xutil
 
 
-## demo
+## usage
 ```go
 package main
 
