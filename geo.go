@@ -110,9 +110,8 @@ func (g Geo) GeoJSON() (s string, err error) {
 	case "MultiPolygon":
 		b, err = json.Marshal(g.Coords)
 	}
-	s = fmt.Sprintf(`{"type":"%s","coordinates":"%s"}`, g.Type, string(b))
+	s = fmt.Sprintf(`{"type":"%s","coordinates":%s}`, g.Type, string(b))
 	return s, err
-
 }
 func (g Geo) String() (wkt string) {
 	return g.ToWKT()
