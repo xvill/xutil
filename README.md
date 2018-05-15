@@ -1,7 +1,7 @@
 # xtools
 
 ## install
-go get -u github.com/xvill/xtools
+go get -u github.com/xvill/xutil
 
 
 ## demo
@@ -11,7 +11,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/xvill/xtools"
+	"github.com/xvill/xutil"
 )
 
 func main() {
