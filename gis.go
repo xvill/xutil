@@ -1,6 +1,10 @@
 package xutil
 
-import "math"
+import (
+	"fmt"
+	"math"
+	"strconv"
+)
 
 /*
 	WGS-84：国际标准,GPS坐标（GoogleEarth、或GPS模块）
@@ -88,7 +92,49 @@ func ToFixed(f float64, n int) float64 {
 	return math.Floor(fv*shift+.5) / shift
 }
 
-// func main() {
+//===============================================================================
+type Point struct {
+	X float64
+	Y float64
+}
+
+func NewPoint(x, y string) (p Point, err error) {
+	m, err := strconv.ParseFloat(x, 64)
+	if err != nil {
+		return p, err
+	}
+	n, err := strconv.ParseFloat(y, 64)
+	if err != nil {
+		return p, err
+	}
+	return Point{X: m, Y: n}, nil
+}
+
+func (p *Point) ReverseXY() {
+	p.X, p.Y = p.Y, p.X
+}
+
+func (p *Point) Wgs2gcj() {
+	p.X, p.Y = Wgs2gcj(p.X, p.Y)
+}
+
+func (p *Point) Wgs2bd() {
+	p.X, p.Y = Wgs2bd(p.X, p.Y)
+}
+
+func (p *Point) Gcj2bd() {
+	p.X, p.Y = Gcj2bd(p.X, p.Y)
+}
+
+func (p Point) String() string {
+	return fmt.Sprintf("%g,%g", p.X, p.Y)
+}
+
+//===============================================================================
+
+// func demo() {
 // 	lat, lon := 31.2355502882, 121.5012091398  //上海中心大厦gps
 // 	fmt.Println(Wgs2bd(lat, lon)) //31.239186 121.512245
 // }
+
+//===============================================================================
