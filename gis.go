@@ -85,6 +85,21 @@ func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
 			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
 }
 
+// DistHaversine  http://en.wikipedia.org/wiki/Haversine_formula
+func DistHaversine(lat1, lon1, lat2, lon2 float64) float64 {
+	radius := 6371000.0 // 6378137
+	rad := math.Pi / 180.0
+
+	dLat := (lat2 - lat1) * rad
+	dLon := (lon2 - lon1) * rad
+	lat1 = (lat1) * rad
+	lat2 = (lat2) * rad
+
+	a := math.Pow(math.Sin(dLat/2), 2) + math.Pow(math.Sin(dLon/2), 2)*math.Cos(lat1)*math.Cos(lat2)
+	return 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a)) * radius
+}
+
+
 // ToFixed 浮点数保留
 func ToFixed(f float64, n int) float64 {
 	shift := math.Pow(10, float64(n))
