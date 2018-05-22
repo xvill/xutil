@@ -74,8 +74,9 @@ func Wgs2bd(lat, lon float64) (float64, float64) {
 }
 
 // EarthDistance 两经纬度距离
+// https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
 func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
-	const EarthRadius = 6378137.0 // 地球半径 
+	const EarthRadius = 6371000.0 // 地球平均半径 WGS84 
 	const Rad = math.Pi / 180.0  // 计算弧度
 	lat1, lng1 = lat1*Rad, lng1*Rad
 	lat2, lng2 = lat2*Rad, lng2*Rad
@@ -86,8 +87,9 @@ func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
 }
 
 // DistHaversine  http://en.wikipedia.org/wiki/Haversine_formula
+// https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
 func DistHaversine(lat1, lon1, lat2, lon2 float64) float64 {
-	radius := 6378137.0 // 6378137
+	radius := 6371000.0  // 地球平均半径 WGS84
 	rad := math.Pi / 180.0
 
 	dLat := (lat2 - lat1) * rad
