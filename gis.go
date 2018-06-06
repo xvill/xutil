@@ -11,8 +11,8 @@ import (
 	GCJ-02：火星坐标,中国坐标偏移标准(GoogleMap、高德、腾讯)
 	BD-09：百度坐标偏移标准(BaiduMap)
 
-	http://www.gpsspg.com/maps.htm 坐标拾取
-	http://lbs.amap.com/console/show/picker 高德坐标拾取
+	http://www.gpsspg.com/maps.htm                      坐标拾取
+	http://lbs.amap.com/console/show/picker             高德坐标拾取
 	http://api.map.baidu.com/lbsapi/getpoint/index.html 百度坐标拾取
 	https://github.com/wandergis/coordtransform         javascript版本 
 	https://github.com/wandergis/coordTransform_py      python版本
@@ -76,7 +76,7 @@ func Wgs2bd(lon, lat float64) (float64, float64) {
 }
 
 // EarthDistance 两经纬度距离
-func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
+func EarthDistance(lng1, lat1, lng2, lat2 float64) float64 {
 	const EarthRadius = 6371000 // 地球半径
 	const Rad = math.Pi / 180.0 // 计算弧度
 	lat1, lng1 = lat1*Rad, lng1*Rad
@@ -136,7 +136,7 @@ func (p Point) String() string {
 
 // func demo() {
 // 	lat, lon := 31.2355502882, 121.5012091398  //上海中心大厦gps
-// 	fmt.Println(Wgs2bd(lat, lon)) //31.239186 121.512245
+// 	fmt.Println(Wgs2bd(lon, lat)) //31.239186 121.512245
 // }
 
 //===============================================================================
