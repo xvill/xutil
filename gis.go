@@ -14,7 +14,9 @@ import (
 	http://www.gpsspg.com/maps.htm 坐标拾取
 	http://lbs.amap.com/console/show/picker 高德坐标拾取
 	http://api.map.baidu.com/lbsapi/getpoint/index.html 百度坐标拾取
-	https://github.com/wandergis/coordtransform  javascript版本
+	https://github.com/wandergis/coordtransform         javascript版本 
+	https://github.com/wandergis/coordTransform_py      python版本
+	https://github.com/FreeGIS/postgis_LayerTransform   postgre版本
 */
 const (
 	_pi  = 3.14159265358979324    //圆周率
@@ -24,7 +26,7 @@ const (
 )
 
 // Wgs2gcj WGS坐标系 ----> GCJ坐标系
-func Wgs2gcj(lat, lon float64) (float64, float64) {
+func Wgs2gcj(lon, lat float64) (float64, float64) {
 	x, y := lon-105.0, lat-35.0
 	dLon := 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*math.Sqrt(math.Abs(x)) +
 		(20*math.Sin(6*x*_pi)+20*math.Sin(2*x*_pi))*2/3 +
@@ -43,41 +45,40 @@ func Wgs2gcj(lat, lon float64) (float64, float64) {
 	dLon = (dLon * 180.0) / (_a / sqrtMagic * math.Cos(radLat) * _pi)
 	mgLat := lat + dLat
 	mgLon := lon + dLon
-	return ToFixed(mgLat, 7), ToFixed(mgLon, 7)
+	return ToFixed(mgLon, 7), ToFixed(mgLat, 7)
 }
 
 // Gcj2bd  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
-func Gcj2bd(lat, lon float64) (float64, float64) {
+func Gcj2bd(lon, lat float64) (float64, float64) {
 	x, y := lon, lat
 	z := math.Sqrt(x*x+y*y) + 0.00002*math.Sin(y*_xpi)
 	theta := math.Atan2(y, x) + 0.000003*math.Cos(x*_xpi)
 	bdLon := z*math.Cos(theta) + 0.0065
 	bdLat := z*math.Sin(theta) + 0.006
-	return ToFixed(bdLat, 7), ToFixed(bdLon, 7)
+	return ToFixed(bdLon, 7), ToFixed(bdLat, 7)
 }
 
 // Bd2gcj  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
-func Bd2gcj(lat, lon float64) (float64, float64) {
+func Bd2gcj(lon, lat float64) (float64, float64) {
 	x, y := lon-0.0065, lat-0.006
 	z := math.Sqrt(x*x+y*y) - 0.00002*math.Sin(y*_xpi)
 	theta := math.Atan2(y, x) - 0.000003*math.Cos(x*_xpi)
 	ggLon := z * math.Cos(theta)
 	ggLat := z * math.Sin(theta)
-	return ToFixed(ggLat, 7), ToFixed(ggLon, 7)
+	return ToFixed(ggLon, 7), ToFixed(ggLat, 7)
 }
 
 // Wgs2bd WGS坐标系 ----> 百度坐标系
-func Wgs2bd(lat, lon float64) (float64, float64) {
-	x, y := Wgs2gcj(lat, lon)
-	lat, lng := Gcj2bd(x, y)
-	return lat, lng
+func Wgs2bd(lon, lat float64) (float64, float64) {
+	x, y := Wgs2gcj(lon, lat)
+	lng, lat := Gcj2bd(x, y)
+	return lng, lat
 }
 
 // EarthDistance 两经纬度距离
-// https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
 func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
-	const EarthRadius = 6371000.0 // 地球平均半径 WGS84 
-	const Rad = math.Pi / 180.0  // 计算弧度
+	const EarthRadius = 6371000 // 地球半径
+	const Rad = math.Pi / 180.0 // 计算弧度
 	lat1, lng1 = lat1*Rad, lng1*Rad
 	lat2, lng2 = lat2*Rad, lng2*Rad
 	theta := lng2 - lng1
@@ -85,22 +86,6 @@ func EarthDistance(lat1, lng1, lat2, lng2 float64) float64 {
 		math.Acos(math.Sin(lat1)*math.Sin(lat2)+
 			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
 }
-
-// DistHaversine  http://en.wikipedia.org/wiki/Haversine_formula
-// https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
-func DistHaversine(lat1, lon1, lat2, lon2 float64) float64 {
-	radius := 6371000.0  // 地球平均半径 WGS84
-	rad := math.Pi / 180.0
-
-	dLat := (lat2 - lat1) * rad
-	dLon := (lon2 - lon1) * rad
-	lat1 = (lat1) * rad
-	lat2 = (lat2) * rad
-
-	a := math.Pow(math.Sin(dLat/2), 2) + math.Pow(math.Sin(dLon/2), 2)*math.Cos(lat1)*math.Cos(lat2)
-	return 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a)) * radius
-}
-
 
 // ToFixed 浮点数保留
 func ToFixed(f float64, n int) float64 {
