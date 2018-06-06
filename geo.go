@@ -99,6 +99,12 @@ func FromGeoJSON(geojson string) (g Geo, err error) {
 
 // GeoJSON 生成GeoJSON
 func (g Geo) GeoJSON() (s string, err error) {
+	s, err = g.CoordsJSON()
+	s = fmt.Sprintf(`{"type":"%s","coordinates":%s}`, g.Type, s)
+	return s, err
+}
+
+func (g Geo) CoordsJSON() (s string, err error) {
 	var b []byte
 	switch g.Type {
 	case "Point":
@@ -110,9 +116,9 @@ func (g Geo) GeoJSON() (s string, err error) {
 	case "MultiPolygon":
 		b, err = json.Marshal(g.Coords)
 	}
-	s = fmt.Sprintf(`{"type":"%s","coordinates":%s}`, g.Type, string(b))
-	return s, err
+	return string(b), err
 }
+
 func (g Geo) String() (wkt string) {
 	return g.ToWKT()
 }
