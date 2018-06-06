@@ -16,8 +16,8 @@ import (
 
 func main() {
 	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
-	g.ReserveLngLat()
 	g.Wgs2gcj()
+    g.ReserveLngLat()
 	fmt.Println(g)
 
 	wktstr := []string{
@@ -50,11 +50,11 @@ func (g Geo) Gcj2bd() {} // 经纬度坐标系转换 gcj->BD09
 func (g Geo) Wgs2bd() {} // 经纬度坐标系转换 wgs->BD09
 func (g Geo) Box() []float64 {}  // 方框边界 minx, miny, maxx, maxy 
  
-func Wgs2gcj(lat, lon float64) (float64, float64){}  // WGS坐标系 ----> GCJ坐标系
-func Gcj2bd(lat, lon float64) (float64, float64){}   //  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
-func Bd2gcj(lat, lon float64) (float64, float64) {}  //  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
-func Wgs2bd(lat, lon float64) (float64, float64) {}  // WGS坐标系 ----> 百度坐标系
-func EarthDistance(lat1, lng1, lat2, lng2 float64) float64{} // 两经纬度距离
+func Wgs2gcj(lon, lat float64) (float64, float64){}  // WGS坐标系 ----> GCJ坐标系
+func Gcj2bd(lon, lat float64) (float64, float64){}   //  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
+func Bd2gcj(lon, lat float64) (float64, float64) {}  //  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
+func Wgs2bd(lon, lat float64) (float64, float64) {}  // WGS坐标系 ----> 百度坐标系
+func EarthDistance(lng1, lat1, lng2, lat2 float64) float64{} // 两经纬度距离
 func ToFixed(f float64, n int) float64 {}    // 浮点数保留
 
 ```
