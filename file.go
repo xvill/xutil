@@ -2,6 +2,7 @@ package xutil
 
 import (
 	"encoding/csv"
+	"errors"
 	"os"
 )
 
