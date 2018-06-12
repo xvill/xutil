@@ -17,7 +17,7 @@ import (
 func main() {
 	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
 	g.Wgs2gcj()
-    g.ReserveLngLat()
+        g.ReserveLngLat()
 	fmt.Println(g)
 
 	wktstr := []string{
