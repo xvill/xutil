@@ -32,24 +32,23 @@ func Sqlldr(timeflag, userid, data, control, baddir string) (
 	rows, badrows, _ = sqlldrLog(logfile)
 
 	// 保留入库文件策略
-	if err != nil && badrows <= 0 { //执行失败
-		return rows, badrows, errors.New(string(cmdout))
-	}
 	if err == nil { // 执行成功
 		os.Remove(logfile)
 		os.Remove(data)
-	}
-	if badrows > 0 { // 执行成功但有错误数据,保留log和bad文件
+	} else if rows > 0 { // 执行成功但有错误数据,保留log和bad文件
 		os.Remove(data)
+	} else { //执行失败
+		return rows, badrows, errors.New(string(cmdout))
 	}
+
 	return rows, badrows, nil
 }
 
 //sqlldrLog 从sqlldr的log文件中获取入库记录数
-func sqlldrLog(name string) (rows, badrows int, err error) {
+func sqlldrLog(logfile string) (rows, badrows int, err error) {
 	rowspat := regexp.MustCompile(`(\d+) Rows? successfully loaded`)
 	rowspatbad := regexp.MustCompile(`(\d+) Rows? not loaded due to data errors`)
-	src, err := ioutil.ReadFile(name)
+	src, err := ioutil.ReadFile(logfile)
 	if err != nil {
 		return
 	}
