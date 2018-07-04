@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// Abs 整数绝对值 https://segmentfault.com/a/1190000013201491
+func Abs(n int64) int64 {
+	y := n >> 63
+	return (n ^ y) - y
+}
+
 // Sum 和
 func Sum(arr []float64) (sum float64) {
 	for _, v := range arr {
