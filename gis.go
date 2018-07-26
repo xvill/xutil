@@ -6,6 +6,14 @@ import (
 	"strconv"
 )
 
+// ToFixed 浮点数保留
+func ToFixed(f float64, n int) float64 {
+	shift := math.Pow(10, float64(n))
+	fv := 0.0000000001 + f //对浮点数产生.xxx999999999 计算不准进行处理
+	return math.Floor(fv*shift+.5) / shift
+}
+
+//===============================================================================
 /*
 	WGS-84：国际标准,GPS坐标（GoogleEarth、或GPS模块）
 	GCJ-02：火星坐标,中国坐标偏移标准(GoogleMap、高德、腾讯)
@@ -14,7 +22,7 @@ import (
 	http://www.gpsspg.com/maps.htm                      坐标拾取
 	http://lbs.amap.com/console/show/picker             高德坐标拾取
 	http://api.map.baidu.com/lbsapi/getpoint/index.html 百度坐标拾取
-	https://github.com/wandergis/coordtransform         javascript版本 
+	https://github.com/wandergis/coordtransform         javascript版本
 	https://github.com/wandergis/coordTransform_py      python版本
 	https://github.com/FreeGIS/postgis_LayerTransform   postgre版本
 */
@@ -75,26 +83,8 @@ func Wgs2bd(lon, lat float64) (float64, float64) {
 	return lng, lat
 }
 
-// EarthDistance 两经纬度距离
-func EarthDistance(lng1, lat1, lng2, lat2 float64) float64 {
-	const EarthRadius = 6371000 // 地球半径
-	const Rad = math.Pi / 180.0 // 计算弧度
-	lat1, lng1 = lat1*Rad, lng1*Rad
-	lat2, lng2 = lat2*Rad, lng2*Rad
-	theta := lng2 - lng1
-	return EarthRadius *
-		math.Acos(math.Sin(lat1)*math.Sin(lat2)+
-			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
-}
-
-// ToFixed 浮点数保留
-func ToFixed(f float64, n int) float64 {
-	shift := math.Pow(10, float64(n))
-	fv := 0.0000000001 + f //对浮点数产生.xxx999999999 计算不准进行处理
-	return math.Floor(fv*shift+.5) / shift
-}
-
 //===============================================================================
+
 type Point struct {
 	X float64
 	Y float64
@@ -130,6 +120,69 @@ func (p *Point) Gcj2bd() {
 
 func (p Point) String() string {
 	return fmt.Sprintf("%g,%g", p.X, p.Y)
+}
+
+//===============================================================================
+
+/***
+http://www.movable-type.co.uk/scripts/latlong.html
+http://en.wikipedia.org/wiki/Haversine_formula	Haversine
+http://en.wikipedia.org/wiki/Spherical_law_of_cosines	Law of Cosines
+http://en.wikipedia.org/wiki/Vincenty's_formulae	Vincenty
+Speed: Law of Cosines > Haversine > Vincenty
+***/
+
+func Radians(r float64) float64 {
+	return r * math.Pi / 180.0
+}
+
+func Degrees(d float64) float64 {
+	return d * 180.0 / math.Pi
+}
+
+// Azimuth  bearing between the two GPS points
+func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {
+	rad := math.Pi / 180.0
+	lat1 = lat1 * rad
+	lat2 = lat2 * rad
+	lon1 = lon1 * rad
+	lon2 = lon2 * rad
+	dLon := lon2 - lon1
+	y := math.Sin(dLon) * math.Cos(lat2)
+	x := math.Cos(lat1)*math.Sin(lat2) - math.Sin(lat1)*math.Cos(lat2)*math.Cos(dLon)
+	a := math.Atan2(y, x)
+	if dLon < 0 {
+		a = a + 2*math.Pi
+	}
+	return a * 180 / math.Pi
+}
+
+// Distance Spherical_law_of_cosines
+func Distance(lon1, lat1, lon2, lat2 float64) float64 {
+	r, rad := 6371000.0, math.Pi/180.0
+	lat1 = lat1 * rad
+	lat2 = lat2 * rad
+	lon1 = lon1 * rad
+	lon2 = lon2 * rad
+	theta := lon2 - lon1
+	return r *
+		math.Acos(math.Sin(lat1)*math.Sin(lat2)+
+			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
+}
+
+// DistanceHaversine  Haversine_formula
+func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
+	r, rad := 6371000.0, math.Pi/180.0
+	dLat := (lat2 - lat1) * rad
+	dLon := (lon2 - lon1) * rad
+	lat1 = lat1 * rad
+	lat2 = lat2 * rad
+
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Sin(dLon/2)*math.Sin(dLon/2)*
+			math.Cos(lat1)*math.Cos(lat2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return r * c
 }
 
 //===============================================================================
