@@ -54,7 +54,9 @@ func Wgs2gcj(lon, lat float64) (float64, float64){}  // WGS坐标系 ----> GCJ�
 func Gcj2bd(lon, lat float64) (float64, float64){}   //  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
 func Bd2gcj(lon, lat float64) (float64, float64) {}  //  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
 func Wgs2bd(lon, lat float64) (float64, float64) {}  // WGS坐标系 ----> 百度坐标系
-func EarthDistance(lng1, lat1, lng2, lat2 float64) float64{} // 两经纬度距离
+
+func Distance(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
+func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
 func ToFixed(f float64, n int) float64 {}    // 浮点数保留
 
 ```
