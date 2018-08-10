@@ -40,8 +40,11 @@ func (c Ftp) NameList(pattern string) (ftpfiles []string) {
 	return ftpfiles
 }
 
-func (c Ftp) FilesByPattern(pattern string) (dat map[string][]byte, err error) {
-	files := c.NameList(pattern)
+func (c Ftp) FilesByPattern(pattern []string) (dat map[string][]byte, err error) {
+	files := make([]string, 0)
+	for _, par := range pattern {
+		files = append(files, c.NameList(par)...)
+	}
 	return c.Files(files)
 }
 
@@ -64,4 +67,19 @@ func (c Ftp) Files(files []string) (dat map[string][]byte, err error) {
 
 func (c Ftp) Logout() error {
 	return c.Conn.Logout()
+}
+
+func FileFTP(host, user, pwd string, pattern []string) (files map[string][]byte, err error) {
+	ftp, err := OpenFtp(host, user, pwd, 10*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	files, err = ftp.FilesByPattern(pattern)
+
+	if err != nil {
+		return nil, err
+	}
+	ftp.Logout()
+
+	return files, nil
 }
