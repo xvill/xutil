@@ -1,9 +1,14 @@
 package xutil
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"strconv"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // ToFixed 浮点数保留
@@ -183,6 +188,32 @@ func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
 			math.Cos(lat1)*math.Cos(lat2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return r * c
+}
+
+// AmapGeocode 高德解析地址为经纬度
+func AmapGeocode(ak, address string) (poi map[string]string, err error) {
+	url := fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?key=%s&address=%s", ak, address)
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	info := jsoniter.Get(body, "info").ToString()
+	if info != "OK" {
+		return poi, errors.New(info)
+	}
+	poi = make(map[string]string, 6)
+	poi["formatted_address"] = jsoniter.Get(body, "geocodes", 0, "formatted_address").ToString()
+	poi["province"] = jsoniter.Get(body, "geocodes", 0, "province").ToString()
+	poi["citycode"] = jsoniter.Get(body, "geocodes", 0, "citycode").ToString()
+	poi["city"] = jsoniter.Get(body, "geocodes", 0, "city").ToString()
+	poi["district"] = jsoniter.Get(body, "geocodes", 0, "district").ToString()
+	poi["location"] = jsoniter.Get(body, "geocodes", 0, "location").ToString()
+	return poi, nil
 }
 
 //===============================================================================
