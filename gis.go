@@ -216,6 +216,28 @@ func AmapGeocode(ak, address string) (poi map[string]string, err error) {
 	return poi, nil
 }
 
+// BdmapGeocode 百度解析地址为经纬度
+func BdmapGeocode(ak, address string) (poi map[string]string, err error) {
+	url := fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", ak, address)
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	info := jsoniter.Get(body, "status").ToString()
+	if info != "0" {
+		msg := jsoniter.Get(body, "message").ToString()
+		return poi, errors.New(msg)
+	}
+	poi = make(map[string]string, 6)
+	poi["lng"] = jsoniter.Get(body, "result", "location", "lng").ToString()
+	poi["lat"] = jsoniter.Get(body, "result", "location", "lat").ToString()
+	return poi, nil
+}
 //===============================================================================
 
 // func demo() {
