@@ -1,6 +1,6 @@
 package xutil
 
-import 	"net"
+import  "net"
 
 func Ip2long(ip net.IP) uint32 {
 	a := uint32(ip[12])
@@ -15,5 +15,6 @@ func Long2ip(ip uint32) net.IP {
 	b := byte((ip >> 16) & 0xFF)
 	c := byte((ip >> 8) & 0xFF)
 	d := byte(ip & 0xFF)
+	// s := fmt.Sprintf("%d.%d.%d.%d", a, b, c, d)
 	return net.IPv4(a, b, c, d)
 }
