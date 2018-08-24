@@ -1,9 +1,6 @@
 package xutil
 
-import (
-	"fmt"
-	"net"
-)
+import 	"net"
 
 func Ip2long(ip net.IP) uint32 {
 	a := uint32(ip[12])
