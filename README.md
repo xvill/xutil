@@ -59,10 +59,12 @@ func Distance(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
 func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
 func ToFixed(f float64, n int) float64 {}    // 浮点数保留
 
+/**
 身份证信息
 行政区信息获取
 http://www.mca.gov.cn/article/sj/xzqh/2018/  2018年行政区划代码
 http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/    统计用区划和城乡划分代码
+**/
 
 func IDsumY(id string) string {} 	// IDsumY 计算身份证的第十八位校验码
 func ID15to18(id string) string {} 	// ID15to18 将15位身份证转换为18位的
