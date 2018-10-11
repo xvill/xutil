@@ -62,8 +62,8 @@ func ToFixed(f float64, n int) float64 {}    // 浮点数保留
 /**
 身份证信息
 行政区信息获取
-http://www.mca.gov.cn/article/sj/xzqh/2018/  2018年行政区划代码
-http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/    统计用区划和城乡划分代码
+  2018年行政区划代码
+/    统计用区划和城乡划分代码
 **/
 
 func IDsumY(id string) string {} 	// IDsumY 计算身份证的第十八位校验码
@@ -73,3 +73,10 @@ func IDisPattern(id string) bool {} 	// IDisPattern 二代身份证正则表达�
 func NewIDCard(id string) (c IDCard, err error) {} 	// NewIDCard  获取身份证信息
 
 ```
+
+**附录：行政区域代码**
+
+- [国家统计局>>统计用区划和城乡划分代码](http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/)
+- [民政部>>2018年中华人民共和国行政区划代码](http://www.mca.gov.cn/article/sj/xzqh/2018/)
+- [全国行政区划信息查询平台](http://xzqh.mca.gov.cn/map)
+- [中华人民共和国民政部](http://www.mca.gov.cn/article/sj/tjbz/a/)
