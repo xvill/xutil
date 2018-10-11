@@ -137,7 +137,7 @@ func demo() {
 	fmt.Println(maddr["140522"])
 	fmt.Println(ID15to18("210212831019104"))
 	fmt.Println(NewIDCard("210212831019104"))
-	fmt.Println(sumY("210212198310191044"))
+	fmt.Println(IDsumY("210212198310191044"))
 	fmt.Println(IDisValid("210212198310191044"))
 	fmt.Println(IDisPattern("210212198310191044"))
 }
