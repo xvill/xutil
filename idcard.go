@@ -53,7 +53,7 @@ func init() {
 }
 
 // IDsumY 计算身份证的第十八位校验码
-func sumY(id string) string {
+func IDsumY(id string) string {
 	wi := [17]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}     //前17位号码加权因子
 	y := [11]string{"1", "0", "X", "9", "8", "7", "6", "5", "4", "3", "2"} //身份证第18位校检码
 	ai, res := make([]int, 17), 0
@@ -69,13 +69,13 @@ func sumY(id string) string {
 // ID15to18 将15位身份证转换为18位的
 func ID15to18(id string) string {
 	newid := id[:6] + "19" + id[6:] //在年份前添加19,变为17位
-	return newid + sumY(newid)      //添加最后一位验证码
+	return newid + IDsumY(newid)      //添加最后一位验证码
 }
 
 // IDisValid 校验身份证第18位是否正确
 func IDisValid(id string) bool {
 	id = strings.ToUpper(id)
-	if sumY(id) != string(id[17]) {
+	if IDsumY(id) != string(id[17]) {
 		return false
 	}
 	return true
