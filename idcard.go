@@ -37,16 +37,16 @@ type IDCard struct {
 	District  string
 }
 
-var maddr map[string]string
+var ChinaAddr map[string]string
 
 // init 初始化 加载行政区信息
-func init() {
-	fname := "idaddr.json"
+func InitAddr() {
+	fname := "ChinaAddr.json"
 	dat, err := ioutil.ReadFile(fname)
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = json.Unmarshal(dat, &maddr)
+	err = json.Unmarshal(dat, &ChinaAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -69,7 +69,7 @@ func IDsumY(id string) string {
 // ID15to18 将15位身份证转换为18位的
 func ID15to18(id string) string {
 	newid := id[:6] + "19" + id[6:] //在年份前添加19,变为17位
-	return newid + IDsumY(newid)      //添加最后一位验证码
+	return newid + IDsumY(newid)    //添加最后一位验证码
 }
 
 // IDisValid 校验身份证第18位是否正确
@@ -107,13 +107,13 @@ func NewIDCard(id string) (c IDCard, err error) {
 		return c, errors.New(" err_birthdate")
 	}
 
-	addr := maddr[string(id[0:6])]
+	addr := ChinaAddr[string(id[0:6])]
 	if addr == "" {
 		return c, errors.New(" err_address")
 	}
 	c.District = addr
-	c.Province = maddr[string(id[0:2])+"0000"]
-	c.City = maddr[string(id[0:4])+"00"]
+	c.Province = ChinaAddr[string(id[0:2])+"0000"]
+	c.City = ChinaAddr[string(id[0:4])+"00"]
 	//------------------------------------
 	now := time.Now()
 	years := now.Year() - t.Year()
@@ -134,7 +134,7 @@ func NewIDCard(id string) (c IDCard, err error) {
 }
 
 func demo() {
-	fmt.Println(maddr["140522"])
+	fmt.Println(ChinaAddr["140522"])
 	fmt.Println(ID15to18("210212831019104"))
 	fmt.Println(NewIDCard("210212831019104"))
 	fmt.Println(IDsumY("210212198310191044"))
