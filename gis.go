@@ -38,27 +38,48 @@ const (
 	_xpi = _pi * 3000.0 / 180.0   //圆周率转换量
 )
 
-// Wgs2gcj WGS坐标系 ----> GCJ坐标系
-func Wgs2gcj(lon, lat float64) (float64, float64) {
-	x, y := lon-105.0, lat-35.0
-	dLon := 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*math.Sqrt(math.Abs(x)) +
-		(20*math.Sin(6*x*_pi)+20*math.Sin(2*x*_pi))*2/3 +
-		(20*math.Sin(x*_pi)+40*math.Sin(x/3*_pi))*2/3 +
-		(150*math.Sin(x/12*_pi)+300*math.Sin(x/30*_pi))*2/3
-	dLat := -100 + 2*x + 3*y + 0.2*y*y + 0.1*x*y + 0.2*math.Sqrt(math.Abs(x)) +
-		(20*math.Sin(6*x*_pi)+20*math.Sin(2*x*_pi))*2/3 +
-		(20*math.Sin(y*_pi)+40*math.Sin(y/3*_pi))*2/3 +
-		(160*math.Sin(y/12*_pi)+320*math.Sin(y*_pi/30))*2/3
+func _transformlon(lon, lat float64) float64 {
+	dlon := 300 + lon + 2*lat + 0.1*lon*lon + 0.1*lon*lat + 0.1*math.Sqrt(math.Abs(lon)) +
+		(20*math.Sin(6*lon*_pi)+20*math.Sin(2*lon*_pi))*2/3 +
+		(20*math.Sin(lon*_pi)+40*math.Sin(lon/3*_pi))*2/3 +
+		(150*math.Sin(lon/12*_pi)+300*math.Sin(lon/30*_pi))*2/3
+	return dlon
+}
 
+func _transformlat(lon, lat float64) float64 {
+	dLat := -100 + 2*lon + 3*lat + 0.2*lat*lat + 0.1*lon*lat + 0.2*math.Sqrt(math.Abs(lon)) +
+		(20*math.Sin(6*lon*_pi)+20*math.Sin(2*lon*_pi))*2/3 +
+		(20*math.Sin(lat*_pi)+40*math.Sin(lat/3*_pi))*2/3 +
+		(160*math.Sin(lat/12*_pi)+320*math.Sin(lat*_pi/30))*2/3
+	return dLat
+}
+
+func _offset(lon, lat float64) (float64, float64) {
+	dlat := _transformlat(lon-105.0, lat-35.0)
+	dlon := _transformlon(lon-105.0, lat-35.0)
 	radLat := lat / 180.0 * _pi
 	magic := math.Sin(radLat)
 	magic = 1 - _ee*magic*magic
 	sqrtMagic := math.Sqrt(magic)
-	dLat = (dLat * 180.0) / ((_a * (1 - _ee)) / (magic * sqrtMagic) * _pi)
-	dLon = (dLon * 180.0) / (_a / sqrtMagic * math.Cos(radLat) * _pi)
-	mgLat := lat + dLat
-	mgLon := lon + dLon
-	return ToFixed(mgLon, 7), ToFixed(mgLat, 7)
+	dlat = (dlat * 180.0) / ((_a * (1 - _ee)) / (magic * sqrtMagic) * _pi)
+	dlon = (dlon * 180.0) / (_a / sqrtMagic * math.Cos(radLat) * _pi)
+	return dlon, dlat
+}
+
+// Wgs2gcj WGS坐标系 ----> GCJ坐标系
+func Wgs2gcj(lon, lat float64) (float64, float64) {
+	dlon, dlat := _offset(lon, lat)
+	mglat := lat + dlat
+	mglon := lon + dlon
+	return ToFixed(mglon, 7), ToFixed(mglat, 7)
+}
+
+// Gcj2Wgs  GCJ坐标系 ----> WGS坐标系
+func Gcj2Wgs(lon, lat float64) (float64, float64) {
+	dlon, dlat := _offset(lon, lat)
+	mglat := lat - dlat
+	mglon := lon - dlon
+	return ToFixed(mglon, 7), ToFixed(mglat, 7)
 }
 
 // Gcj2bd  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
@@ -85,6 +106,13 @@ func Bd2gcj(lon, lat float64) (float64, float64) {
 func Wgs2bd(lon, lat float64) (float64, float64) {
 	x, y := Wgs2gcj(lon, lat)
 	lng, lat := Gcj2bd(x, y)
+	return lng, lat
+}
+
+// Bd2Wgs 百度坐标系 ----> WGS坐标系
+func Bd2Wgs(lon, lat float64) (float64, float64) {
+	x, y := Bd2gcj(lon, lat)
+	lng, lat := Gcj2Wgs(x, y)
 	return lng, lat
 }
 
@@ -238,6 +266,7 @@ func BdmapGeocode(ak, address string) (poi map[string]string, err error) {
 	poi["lat"] = jsoniter.Get(body, "result", "location", "lat").ToString()
 	return poi, nil
 }
+
 //===============================================================================
 
 // func demo() {
