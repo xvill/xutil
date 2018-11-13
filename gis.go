@@ -173,6 +173,19 @@ func Degrees(d float64) float64 {
 	return d * 180.0 / math.Pi
 }
 
+func MidPoint(lon1, lat1, lon2, lat2 float64) (float64, float64) {
+	λ1 := Radians(lon1)
+	λ2 := Radians(lon2)
+	φ1 := Radians(lat1)
+	φ2 := Radians(lat2)
+	Bx := math.Cos(φ2) * math.Cos(λ2-λ1)
+	By := math.Cos(φ2) * math.Sin(λ2-λ1)
+	φ3 := math.Atan2(math.Sin(φ1)+math.Sin(φ2), math.Sqrt((math.Cos(φ1)+Bx)*(math.Cos(φ1)+Bx)+By*By))
+	λ3 := λ1 + math.Atan2(By, math.Cos(φ1)+Bx)
+
+	return Degrees(λ3), Degrees(φ3)
+}
+
 // Azimuth  bearing between the two GPS points
 func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {
 	rad := math.Pi / 180.0
@@ -190,7 +203,7 @@ func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {
 	return a * 180 / math.Pi
 }
 
-// Distance Spherical_law_of_cosines
+// Distance (in meter) Spherical_law_of_cosines
 func Distance(lon1, lat1, lon2, lat2 float64) float64 {
 	r, rad := 6371000.0, math.Pi/180.0
 	lat1 = lat1 * rad
@@ -198,12 +211,11 @@ func Distance(lon1, lat1, lon2, lat2 float64) float64 {
 	lon1 = lon1 * rad
 	lon2 = lon2 * rad
 	theta := lon2 - lon1
-	return r *
-		math.Acos(math.Sin(lat1)*math.Sin(lat2)+
-			math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
+	return r * math.Acos(math.Sin(lat1)*math.Sin(lat2)+
+		math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
 }
 
-// DistanceHaversine  Haversine_formula
+// DistanceHaversine (in meter) Haversine_formula
 func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
 	r, rad := 6371000.0, math.Pi/180.0
 	dLat := (lat2 - lat1) * rad
@@ -211,11 +223,38 @@ func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
 	lat1 = lat1 * rad
 	lat2 = lat2 * rad
 
-	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
-		math.Sin(dLon/2)*math.Sin(dLon/2)*
-			math.Cos(lat1)*math.Cos(lat2)
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) + math.Sin(dLon/2)*math.Sin(dLon/2)*math.Cos(lat1)*math.Cos(lat2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return r * c
+}
+
+//DistancePoint   Destination point given distance and bearing from start point
+func DistancePoint(lon1, lat1, dist, azimuth float64) (float64, float64) {
+	/**
+	Destination point given distance and bearing from start point
+	http://www.movable-type.co.uk/scripts/latlong.html
+	Formula:	φ2 = asin( sin φ1 ⋅ cos δ + cos φ1 ⋅ sin δ ⋅ cos θ )
+				λ2 = λ1 + atan2( sin θ ⋅ sin δ ⋅ cos φ1, cos δ − sin φ1 ⋅ sin φ2 )
+	where	φ is latitude, λ is longitude,
+			θ is the bearing (clockwise from north),
+			δ is the angular distance d/R;
+			d being the distance travelled,R the earth’s radius
+	*/
+
+	φ1 := Radians(lat1)
+	λ1 := Radians(lon1)
+	θ := Radians(azimuth)
+	δ := dist / _a // normalize linear distance to radian angle
+
+	φ2 := math.Asin(math.Sin(φ1)*math.Cos(δ) + math.Cos(φ1)*math.Sin(δ)*math.Cos(θ))
+	λ2 := λ1 + math.Atan2(math.Sin(θ)*math.Sin(δ)*math.Cos(φ1), math.Cos(δ)-math.Sin(φ1)*math.Sin(φ2))
+
+	if λ2 < 0 {
+		λ2 = λ2 + 2*math.Pi
+	}
+	// λ2_harmonised := (λ2+3.0*math.Pi)%(2.0*math.Pi) - math.Pi // normalise to −180..+180°
+	// return Degrees(λ2_harmonised), Degrees(φ2)
+	return Degrees(λ2), Degrees(φ2)
 }
 
 // AmapGeocode 高德解析地址为经纬度
