@@ -173,19 +173,6 @@ func Degrees(d float64) float64 {
 	return d * 180.0 / math.Pi
 }
 
-func MidPoint(lon1, lat1, lon2, lat2 float64) (float64, float64) {
-	λ1 := Radians(lon1)
-	λ2 := Radians(lon2)
-	φ1 := Radians(lat1)
-	φ2 := Radians(lat2)
-	Bx := math.Cos(φ2) * math.Cos(λ2-λ1)
-	By := math.Cos(φ2) * math.Sin(λ2-λ1)
-	φ3 := math.Atan2(math.Sin(φ1)+math.Sin(φ2), math.Sqrt((math.Cos(φ1)+Bx)*(math.Cos(φ1)+Bx)+By*By))
-	λ3 := λ1 + math.Atan2(By, math.Cos(φ1)+Bx)
-
-	return Degrees(λ3), Degrees(φ3)
-}
-
 // Azimuth  bearing between the two GPS points
 func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {
 	rad := math.Pi / 180.0
@@ -203,8 +190,8 @@ func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {
 	return a * 180 / math.Pi
 }
 
-// Distance (in meter) Spherical_law_of_cosines
-func Distance(lon1, lat1, lon2, lat2 float64) float64 {
+// PointDistance (in meter) Spherical_law_of_cosines
+func PointDistance(lon1, lat1, lon2, lat2 float64) float64 {
 	r, rad := 6371000.0, math.Pi/180.0
 	lat1 = lat1 * rad
 	lat2 = lat2 * rad
@@ -215,8 +202,8 @@ func Distance(lon1, lat1, lon2, lat2 float64) float64 {
 		math.Cos(lat1)*math.Cos(lat2)*math.Cos(theta))
 }
 
-// DistanceHaversine (in meter) Haversine_formula
-func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
+// PointDistHaversine (in meter) Haversine_formula
+func PointDistHaversine(lon1, lat1, lon2, lat2 float64) float64 {
 	r, rad := 6371000.0, math.Pi/180.0
 	dLat := (lat2 - lat1) * rad
 	dLon := (lon2 - lon1) * rad
@@ -228,8 +215,22 @@ func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {
 	return r * c
 }
 
-//DistancePoint   Destination point given distance and bearing from start point
-func DistancePoint(lon1, lat1, dist, azimuth float64) (float64, float64) {
+// PointMid 两点间的中间点
+func PointMid(lon1, lat1, lon2, lat2 float64) (float64, float64) {
+	λ1 := Radians(lon1)
+	λ2 := Radians(lon2)
+	φ1 := Radians(lat1)
+	φ2 := Radians(lat2)
+	Bx := math.Cos(φ2) * math.Cos(λ2-λ1)
+	By := math.Cos(φ2) * math.Sin(λ2-λ1)
+	φ3 := math.Atan2(math.Sin(φ1)+math.Sin(φ2), math.Sqrt((math.Cos(φ1)+Bx)*(math.Cos(φ1)+Bx)+By*By))
+	λ3 := λ1 + math.Atan2(By, math.Cos(φ1)+Bx)
+
+	return Degrees(λ3), Degrees(φ3)
+}
+
+// PointAt   Destination point given distance and bearing from start point
+func PointAt(lon, lat, dist, azimuth float64) (float64, float64) {
 	/**
 	Destination point given distance and bearing from start point
 	http://www.movable-type.co.uk/scripts/latlong.html
@@ -241,8 +242,8 @@ func DistancePoint(lon1, lat1, dist, azimuth float64) (float64, float64) {
 			d being the distance travelled,R the earth’s radius
 	*/
 
-	φ1 := Radians(lat1)
-	λ1 := Radians(lon1)
+	φ1 := Radians(lat)
+	λ1 := Radians(lon)
 	θ := Radians(azimuth)
 	δ := dist / _a // normalize linear distance to radian angle
 
