@@ -52,11 +52,16 @@ func (g Geo) Box() []float64 {}  // 方框边界 minx, miny, maxx, maxy
  
 func Wgs2gcj(lon, lat float64) (float64, float64){}  // WGS坐标系 ----> GCJ坐标系
 func Gcj2bd(lon, lat float64) (float64, float64){}   //  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
+func Gcj2Wgs(lon, lat float64) (float64, float64){}   //  火星(GCJ-02)坐标系 ----> WGS坐标系
 func Bd2gcj(lon, lat float64) (float64, float64) {}  //  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
 func Wgs2bd(lon, lat float64) (float64, float64) {}  // WGS坐标系 ----> 百度坐标系
 
-func Distance(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
-func DistanceHaversine(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
+func Azimuth(lon1, lat1, lon2, lat2 float64) float64 {} // P1到P2 的方位角
+func PointDistance(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
+func PointDistHaversine(lon1, lat1, lon2, lat2 float64) float64 {} // 两经纬度距离
+func PointMid(lon1, lat1, lon2, lat2 float64) (float64, float64) {} // P1和P2中间点
+func PointAt(lon, lat, dist, azimuth float64) (float64, float64) {} // 根据起点、距离、方位角计算另一个点
+
 func ToFixed(f float64, n int) float64 {}    // 浮点数保留
 
 /**身份证**/
@@ -73,3 +78,4 @@ func NewIDCard(id string) (c IDCard, err error) {} 	// NewIDCard  获取身份�
 - [中华人民共和国国家统计局>>统计用区划和城乡划分代码](http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/)
 - [中华人民共和国民政部>>2018年中华人民共和国行政区划代码](http://www.mca.gov.cn/article/sj/xzqh/2018/)
 - [中华人民共和国民政部>>全国行政区划信息查询平台](http://xzqh.mca.gov.cn/map)
+- [Calculate distance, bearing and more between Latitude/Longitude points](http://www.movable-type.co.uk/scripts/latlong.html)
