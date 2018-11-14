@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,75 @@ type Geo struct {
 	Type   string
 	Coords [][][][]float64
 }
+type Line struct {
+	X1 float64
+	Y1 float64
+	X2 float64
+	Y2 float64
+}
+
+//===============================================================================
+type Point struct {
+	X float64
+	Y float64
+}
+
+func NewPoint(x, y string) (p Point, err error) {
+	m, err := strconv.ParseFloat(x, 64)
+	if err != nil {
+		return p, err
+	}
+	n, err := strconv.ParseFloat(y, 64)
+	if err != nil {
+		return p, err
+	}
+	return Point{X: m, Y: n}, nil
+}
+
+func (p *Point) ReverseXY() {
+	p.X, p.Y = p.Y, p.X
+}
+
+func (p *Point) Wgs2gcj() {
+	p.X, p.Y = Wgs2gcj(p.X, p.Y)
+}
+
+func (p *Point) Wgs2bd() {
+	p.X, p.Y = Wgs2bd(p.X, p.Y)
+}
+
+func (p *Point) Gcj2bd() {
+	p.X, p.Y = Gcj2bd(p.X, p.Y)
+}
+
+func (p Point) String() string {
+	return fmt.Sprintf("%g,%g", p.X, p.Y)
+}
+
+//===============================================================================
+
+func (g Geo) Lines() []Line {
+	lines := []Line{}
+	for _, a := range g.Coords {
+		for _, b := range a {
+			lines = append(lines, Line{b[0][0], b[0][1], b[1][0], b[1][1]})
+		}
+	}
+	return lines
+}
+func (g Geo) Points() []Point {
+	points := []Point{}
+	for _, a := range g.Coords {
+		for _, b := range a {
+			for _, c := range b {
+				points = append(points, Point{c[0], c[1]})
+			}
+		}
+	}
+	return points
+}
+
+//===============================================================================
 
 // FromWKT 解析WKT为Geo
 func FromWKT(wkt string) (g Geo, err error) {
