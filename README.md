@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
+	g, _ := xutil.FromWKT("POINT(121.44528145 30.96964209)")
 	g.Wgs2gcj()
         g.ReserveLngLat()
 	fmt.Println(g)
@@ -29,7 +29,7 @@ func main() {
 		"MULTIPOLYGON(((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2)),((3 3,6 2,6 4,3 3)))",
 	}
 	for _, s := range wktstr {
-		g, _ := xtools.FromWKT(s)
+		g, _ := xutil.FromWKT(s)
 		fmt.Println(g.GeoJSON())
 	}
 }
