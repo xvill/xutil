@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
-	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -114,45 +113,6 @@ func Bd2Wgs(lon, lat float64) (float64, float64) {
 	x, y := Bd2gcj(lon, lat)
 	lng, lat := Gcj2Wgs(x, y)
 	return lng, lat
-}
-
-//===============================================================================
-
-type Point struct {
-	X float64
-	Y float64
-}
-
-func NewPoint(x, y string) (p Point, err error) {
-	m, err := strconv.ParseFloat(x, 64)
-	if err != nil {
-		return p, err
-	}
-	n, err := strconv.ParseFloat(y, 64)
-	if err != nil {
-		return p, err
-	}
-	return Point{X: m, Y: n}, nil
-}
-
-func (p *Point) ReverseXY() {
-	p.X, p.Y = p.Y, p.X
-}
-
-func (p *Point) Wgs2gcj() {
-	p.X, p.Y = Wgs2gcj(p.X, p.Y)
-}
-
-func (p *Point) Wgs2bd() {
-	p.X, p.Y = Wgs2bd(p.X, p.Y)
-}
-
-func (p *Point) Gcj2bd() {
-	p.X, p.Y = Gcj2bd(p.X, p.Y)
-}
-
-func (p Point) String() string {
-	return fmt.Sprintf("%g,%g", p.X, p.Y)
 }
 
 //===============================================================================
