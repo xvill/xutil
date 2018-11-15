@@ -82,3 +82,4 @@ func NewIDCard(id string) (c IDCard, err error) {} 	// NewIDCard  获取身份�
 - [中华人民共和国民政部>>2018年中华人民共和国行政区划代码](http://www.mca.gov.cn/article/sj/xzqh/2018/)
 - [中华人民共和国民政部>>全国行政区划信息查询平台](http://xzqh.mca.gov.cn/map)
 - [Calculate distance, bearing and more between Latitude/Longitude points](http://www.movable-type.co.uk/scripts/latlong.html)
+- [Well-known text - Wikipedia](https://en.wikipedia.org/wiki/Well-known_text)
