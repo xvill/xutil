@@ -44,6 +44,9 @@ func IsFileExist(path string) (isExist, isDir bool, err error) {}    // 文件�
 func FromWKT(wkt string) (Geo, error){}  // 解析WKT为Geo
 func (g Geo) ToWKT() (wkt string) {} // 生成WKT
 func (g Geo) GeoJSON() (s string, err error) {}  // 生成GeoJSON
+func (g Geo) Lines() []Line {} // 所有线段
+func (g Geo) Points() []Point {} // 所有点
+func (g Geo) PointFunc(f func(lon, lat float64) (float64, float64)) {} // 对所有点应用函数
 func (g Geo) ReserveLngLat() {}  // 转换Lat,Lng 位置
 func (g Geo) Wgs2gcj(){} // 经纬度坐标系转换 wgs-> gcj
 func (g Geo) Gcj2bd() {} // 经纬度坐标系转换 gcj->BD09
