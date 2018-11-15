@@ -10,23 +10,23 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/xvill/xutil"
 )
 
 func main() {
 	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
 	g.Wgs2gcj()
-        g.ReserveLngLat()
+	g.ReserveLngLat()
 	fmt.Println(g)
 
 	wktstr := []string{
 		"POINT(1 2)",
 		"LINESTRING(3 4,10 50,20 25)",
-		"POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))",
-		"MULTIPOINT(3.5 5.6,4.8 10.5)",
-		"MULTILINESTRING((3 4,10 50,20 25),(-5 -8,-10 -8,-15 -4))",
-		"MULTIPOLYGON(((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2)),((3 3,6 2,6 4,3 3)))",
+		"POLYGON((30 10, 40 40, 20 40, 10 20, 30 10))",
+		"POLYGON((35 10, 45 45, 15 40, 10 20, 35 10),(20 30, 35 35, 30 20, 20 30))", //POLYGON with hole
+		"MULTIPOINT (10 40, 40 30, 20 20, 30 10)",
+		"MULTILINESTRING((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))",
+		"MULTIPOLYGON(((30 20, 45 40, 10 40, 30 20)),((15 5, 40 10, 10 20, 5 10, 15 5)))",
+		"MULTIPOLYGON(((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))",
 	}
 	for _, s := range wktstr {
 		g, _ := xtools.FromWKT(s)
