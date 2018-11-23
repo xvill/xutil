@@ -10,12 +10,14 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/xvill/xutil"
 )
 
 func main() {
-	g, _ := xtools.FromWKT("POINT(121.44528145 30.96964209)")
+	g, _ := xutil.FromWKT("POINT(121.44528145 30.96964209)")
 	g.Wgs2gcj()
-	g.ReserveLngLat()
+	g.ReverseLngLat()
 	fmt.Println(g)
 
 	wktstr := []string{
@@ -29,7 +31,7 @@ func main() {
 		"MULTIPOLYGON(((40 40, 20 45, 45 30, 40 40)),((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),(30 20, 20 15, 20 25, 30 20)))",
 	}
 	for _, s := range wktstr {
-		g, _ := xtools.FromWKT(s)
+		g, _ := xutil.FromWKT(s)
 		fmt.Println(g.GeoJSON())
 	}
 }
