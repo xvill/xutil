@@ -59,8 +59,8 @@ func Gcj2Wgs(lon, lat float64) (float64, float64){}   //  火星(GCJ-02)坐标�
 func Bd2gcj(lon, lat float64) (float64, float64) {}  //  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
 func Wgs2bd(lon, lat float64) (float64, float64) {}  // WGS坐标系 ----> 百度坐标系
 
-func TileDeg2num(lng, lat float64, z int) (x, y int) {} //瓦片:lnglat转XY
-func TileNum2deg(x, y, z int) (lat, lng float64) {} //瓦片:XY转lnglat
+func Wgs2Tile(lng, lat float64, z int) (x, y int) {} //瓦片:lnglat转XY
+func Tile2Wgs(x, y, z int) (lat, lng float64) {} //瓦片:XY转lnglat
 
 func Bd09ToTile(x, y float64, zoom int) (int, int) {} //百度经纬度转换为瓦片编号
 func MercatorToBd09(x, y float64) (float64, float64) {} //墨卡托坐标转百度经纬度坐标
