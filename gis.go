@@ -286,16 +286,23 @@ func BdmapGeocode(ak, address string) (poi map[string]string, err error) {
 }
 
 //===============================================================================
+/*** 墨卡托坐标体系
+https://en.wikipedia.org/wiki/Web_Mercator
+https://en.wikipedia.org/wiki/Tile_Map_Service 瓦片地图服务
+https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+https://github.com/CntChen/tile-lnglat-transform 提供了高德、百度、谷歌和腾讯地图的经纬度坐标与瓦片坐标的相互转换
+https://lbs.amap.com/api/javascript-api/reference/map/  高德地图层级
+****/
 
-//TileDeg2num 瓦片:lnglat转XY
-func TileDeg2num(lng, lat float64, z int) (x, y int) {
+// Wgs2Tile 瓦片:lnglat转XY
+func Wgs2Tile(lng, lat float64, z int) (x, y int) {
 	x = int(math.Floor((lng + 180.0) / 360.0 * (math.Exp2(float64(z)))))
 	y = int(math.Floor((1.0 - math.Log(math.Tan(lat*math.Pi/180.0)+1.0/math.Cos(lat*math.Pi/180.0))/math.Pi) / 2.0 * (math.Exp2(float64(z)))))
 	return
 }
 
-//TileNum2deg 瓦片:XY转lnglat
-func TileNum2deg(x, y, z int) (lat, lng float64) {
+// Tile2Wgs 瓦片:XY转lnglat
+func Tile2Wgs(x, y, z int) (lat, lng float64) {
 	n := math.Pi - 2.0*math.Pi*float64(y)/math.Exp2(float64(z))
 	lat = 180.0 / math.Pi * math.Atan(0.5*(math.Exp(n)-math.Exp(-n)))
 	lng = float64(x)/math.Exp2(float64(z))*360.0 - 180.0
@@ -304,8 +311,8 @@ func TileNum2deg(x, y, z int) (lat, lng float64) {
 
 // TileImage 经纬度转瓦片像素点位置
 func TileImage(lng, lat float64, z int, deg int) (x, y, px, py int) {
-	x, y = TileDeg2num(lng, lat, z)
-	x4, y4 := TileDeg2num(lng, lat, z+int(math.Log(float64(deg))/math.Log(2)))
+	x, y = Wgs2Tile(lng, lat, z)
+	x4, y4 := Wgs2Tile(lng, lat, z+int(math.Log(float64(deg))/math.Log(2)))
 	px, py = x4-x*deg, y4-y*deg
 	return
 }
@@ -313,7 +320,8 @@ func TileImage(lng, lat float64, z int, deg int) (x, y, px, py int) {
 //===================百度经纬度<--->墨卡托============================================================
 
 //Bd09ToTile 百度经纬度转换为瓦片编号
-func Bd09ToTile(x, y float64, zoom int) (int, int) {
+func Bd09ToTile(lng, lat float64, zoom int) (int, int) {
+	x, y := Bd09ToMercator(lng, lat)
 	cV := math.Pow(2, float64(18-zoom)) * 256
 	return int(math.Floor(x / cV)), int(math.Floor(y / cV))
 }
@@ -334,7 +342,6 @@ func MercatorToBd09(x, y float64) (float64, float64) {
 
 // Bd09ToMercator 百度经纬度坐标转墨卡托坐标
 func Bd09ToMercator(lng, lat float64) (float64, float64) {
-	cE := []float64{}
 	getLoop := func(lng float64, min, max float64) float64 {
 		for lng > max {
 			lng = lng - max - min
@@ -348,6 +355,7 @@ func Bd09ToMercator(lng, lat float64) (float64, float64) {
 		return math.Min(math.Max(lat, min), max)
 	}
 
+	cE := []float64{}
 	lng = getLoop(lng, -180.0, 180.0)
 	lat = getRange(lat, -74.0, 74.0)
 	for i := 0; i < len(_llband); i++ {
@@ -384,11 +392,11 @@ func yr(x, y float64, cE []float64) (float64, float64) {
 //===============================================================================
 
 func demogis() {
-	lon, lat := 121.5012091398, 31.2355502882 //上海中心大厦gps
-	bdlon, bdlat := Wgs2bd(lon, lat)          //31.239186 121.512245
+	lng, lat := 121.5012091398, 31.2355502882 //上海中心大厦gps
+	bdlng, bdlat := Wgs2bd(lng, lat)          //31.239186 121.512245
 	// lng, lat := MercatorToBd09(13525446.26, 3639969.64)
-	x, y := Bd09ToMercator(bdlon, bdlat)
-	fmt.Println(bdlon, bdlat)
+	x, y := Bd09ToMercator(bdlng, bdlat)
+	fmt.Println(bdlng, bdlat)
 	fmt.Println(x, y)
 	fmt.Println(Bd09ToTile(x, y, 15))
 }
