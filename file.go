@@ -11,6 +11,25 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+//FileLinesCount 文件行数计算
+func FileLinesCount(filename string) int {
+	count := 0
+	file, err := os.Open(filename)
+	if err != nil {
+		return count
+	}
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	for {
+		_, _, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+		count++
+	}
+	return count
+}
+
 //IsFileExist 文件是否存在
 func IsFileExist(path string) (isExist, isDir bool, err error) {
 	fi, err := os.Stat(path)
