@@ -1,10 +1,16 @@
 package xutil
 
 import (
+	"bufio"
+	"crypto/md5"
+	"crypto/sha1"
 	"encoding/csv"
 	"errors"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -12,7 +18,7 @@ import (
 )
 
 //FileLinesCount 文件行数计算
-func FileLinesCount(filename string) int {
+func FileLinesCount(filename string, delim byte) int {
 	count := 0
 	file, err := os.Open(filename)
 	if err != nil {
@@ -20,14 +26,33 @@ func FileLinesCount(filename string) int {
 	}
 	defer file.Close()
 	reader := bufio.NewReader(file)
+	line := []byte{}
 	for {
-		_, _, err := reader.ReadLine()
+		line, err = reader.ReadBytes(delim)
 		if err != nil {
 			break
 		}
 		count++
 	}
+	if len(line) > 0 {
+		count++
+	}
 	return count
+}
+
+//FilePatternLinesCount 匹配文件行数计算
+func FilePatternLinesCount(fexp string, delim byte) (count int, detail map[string]int) {
+	detail = make(map[string]int, 0)
+	files, err := filepath.Glob(fexp)
+	if err != nil {
+		return count, nil
+	}
+	for _, fname := range files {
+		n := FileLinesCount(fname, delim)
+		detail[fname] = n
+		count = count + n
+	}
+	return count, detail
 }
 
 //IsFileExist 文件是否存在
@@ -56,6 +81,8 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 
 	return nil
 }
+
+//--------------------------------------------------------------------------------------------------------------------
 
 type SSftp struct {
 	Ssh  *ssh.Client
@@ -128,3 +155,127 @@ func (s SSftp) Close() error {
 	err = s.Ssh.Close()
 	return err
 }
+
+//---------------------------------------------------------------------
+
+func FileSize(fname string) int64 {
+	file, err := os.Stat(fname)
+
+	//if file can't be found create an err message and close program
+	if os.IsNotExist(err) {
+		log.Fatal("File does not exsist at: ", fname)
+	}
+	//if any filesystem error occurs close the program with err details
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get and return the size of the file
+	return file.Size()
+}
+
+func FileMD5(fname string) ([]byte, error) {
+	file, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	h := md5.New()
+	if _, err := io.Copy(h, file); err != nil {
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+func FileSHA1(fname string) ([]byte, error) {
+	f, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	h := sha1.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+// FileCopy 文件/文件夹/链接复制
+func FileCopy(src, dest string) error {
+	info, err := os.Lstat(src)
+	if err != nil {
+		return err
+	}
+	return copy(src, dest, info)
+}
+
+func copy(src, dest string, info os.FileInfo) error {
+	if info.Mode()&os.ModeSymlink != 0 {
+		return linkcopy(src, dest, info)
+	}
+	if info.IsDir() {
+		return dircopy(src, dest, info)
+	}
+	return filecopy(src, dest, info)
+}
+
+func filecopy(src, dest string, info os.FileInfo) error {
+
+	if err := os.MkdirAll(filepath.Dir(dest), os.ModePerm); err != nil {
+		return err
+	}
+
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err = os.Chmod(f.Name(), info.Mode()); err != nil {
+		return err
+	}
+
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	_, err = io.Copy(f, s)
+	return err
+}
+
+func dircopy(srcdir, destdir string, info os.FileInfo) error {
+	originalMode := info.Mode()
+	if err := os.MkdirAll(destdir, 0755); err != nil {
+		return err
+	}
+	// Recover dir mode with original one.
+	defer os.Chmod(destdir, originalMode)
+	contents, err := ioutil.ReadDir(srcdir)
+	if err != nil {
+		return err
+	}
+
+	for _, content := range contents {
+		cs, cd := filepath.Join(srcdir, content.Name()), filepath.Join(destdir, content.Name())
+		if err := copy(cs, cd, content); err != nil {
+			// If any error, exit immediately
+			return err
+		}
+	}
+
+	return nil
+}
+
+func linkcopy(src, dest string, info os.FileInfo) error {
+	src, err := os.Readlink(src)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(src, dest)
+}
+
+//---------------------------------------------------------------------
