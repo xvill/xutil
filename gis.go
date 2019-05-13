@@ -292,6 +292,7 @@ https://en.wikipedia.org/wiki/Tile_Map_Service 瓦片地图服务
 https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 https://github.com/CntChen/tile-lnglat-transform 提供了高德、百度、谷歌和腾讯地图的经纬度坐标与瓦片坐标的相互转换
 https://lbs.amap.com/api/javascript-api/reference/map/  高德地图层级
+https://github.com/davvo/mercator
 ****/
 
 // Wgs2Tile 瓦片:lnglat转XY
