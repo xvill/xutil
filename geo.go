@@ -284,11 +284,13 @@ func (g Geo) Box() []float64 {
 }
 
 // IsClockwise  Green公式判断顺时针
-func IsClockwise(latlngs [][]float64) bool {
+// isClockwise  Green公式判断顺时针
+func isClockwise(lnglats [][]float64) bool {
 	d := 0.0
-	n := len(latlngs)
+	n := len(lnglats)
 	for i := 0; i < n-1; i++ {
-		d += -0.5 * (latlngs[i][0] + latlngs[i+1][0]) * (latlngs[i+1][1] - latlngs[i][1])
+		d += -0.5 * (lnglats[i][1] + lnglats[i+1][1]) * (lnglats[i+1][0] - lnglats[i][0])
+		//d+= －0.5*(y[i+1]+y[i])*(x[i+1]-x[i])
 	}
 	if d > 0 {
 		return false //counter clockwise
