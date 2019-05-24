@@ -282,3 +282,16 @@ func (g Geo) Box() []float64 {
 	}
 	return []float64{minx, miny, maxx, maxy}
 }
+
+// IsClockwise  Green公式判断顺时针
+func IsClockwise(latlngs [][]float64) bool {
+	d := 0.0
+	n := len(latlngs)
+	for i := 0; i < n-1; i++ {
+		d += -0.5 * (latlngs[i][0] + latlngs[i+1][0]) * (latlngs[i+1][1] - latlngs[i][1])
+	}
+	if d > 0 {
+		return false //counter clockwise
+	}
+	return true // clockwise
+}
