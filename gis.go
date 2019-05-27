@@ -29,6 +29,7 @@ func ToFixed(f float64, n int) float64 {
 	https://github.com/wandergis/coordtransform         javascript版本
 	https://github.com/wandergis/coordTransform_py      python版本
 	https://github.com/FreeGIS/postgis_LayerTransform   postgre版本
+	https://github.com/googollee/eviltransform          多种版本
 */
 const (
 	_pi  = 3.14159265358979324    //圆周率
