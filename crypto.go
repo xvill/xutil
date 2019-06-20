@@ -46,7 +46,7 @@ type Crypto struct {
 }
 
 func NewCrypto(key []byte) Crypto {
-	return Crypto{Key: key, IV: key, Mode: "CBC", Algorithm: "AES", Padding: "PKCS5"}
+	return Crypto{Key: key, IV: key, Algorithm: "AES", Mode: "CBC", Padding: "PKCS5"}
 }
 
 func (c *Crypto) padding(data []byte, blockSize int) []byte {
