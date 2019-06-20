@@ -64,47 +64,44 @@ func (c *Crypto) unpadding(data []byte) []byte {
 }
 
 //================================================================================================
-func (c *Crypto) Encrypt(data []byte) (text []byte, err error) {
-	key, iv := c.Key, c.IV
+func (c *Crypto) Encrypt(data []byte) (dst []byte, err error) {
 	var block cipher.Block
 	if c.Algorithm == "AES" {
-		block, err = aes.NewCipher(key)
+		block, err = aes.NewCipher(c.Key)
 	} else if c.Algorithm == "DES" {
-		block, err = des.NewCipher(key)
+		block, err = des.NewCipher(c.Key)
 	}
 	if err != nil {
 		return nil, err
 	}
 	bs := block.BlockSize()
 	data = c.padding(data, bs)
-	text = make([]byte, len(data))
+	dst = make([]byte, len(data))
 	switch c.Mode {
 	case "ECB":
-		// dst := text
 		for len(data) > 0 {
-			block.Encrypt(text, data[:bs])
+			block.Encrypt(dst, data[:bs])
 			data = data[bs:]
-			text = text[bs:]
+			dst = dst[bs:]
 		}
 	case "CBC":
-		cipher.NewCBCEncrypter(block, iv).CryptBlocks(text, data)
+		cipher.NewCBCEncrypter(block, c.IV).CryptBlocks(dst, data)
 	case "CTR":
-		cipher.NewCTR(block, iv).XORKeyStream(text, data)
+		cipher.NewCTR(block, c.IV).XORKeyStream(dst, data)
 	case "OFB":
-		cipher.NewOFB(block, iv).XORKeyStream(text, data)
+		cipher.NewOFB(block, c.IV).XORKeyStream(dst, data)
 	case "CFB":
-		cipher.NewCFBEncrypter(block, iv).XORKeyStream(text, data)
+		cipher.NewCFBEncrypter(block, c.IV).XORKeyStream(dst, data)
 	}
-	return text, nil
+	return dst, nil
 }
 
-func (c *Crypto) Decrypt(data []byte) (text []byte, err error) {
-	key, iv := c.Key, c.IV
+func (c *Crypto) Decrypt(data []byte) (dst []byte, err error) {
 	var block cipher.Block
 	if c.Algorithm == "AES" {
-		block, err = aes.NewCipher(key)
+		block, err = aes.NewCipher(c.Key)
 	} else if c.Algorithm == "DES" {
-		block, err = des.NewCipher(key)
+		block, err = des.NewCipher(c.Key)
 	}
 	if err != nil {
 		return nil, err
@@ -113,24 +110,23 @@ func (c *Crypto) Decrypt(data []byte) (text []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	text = make([]byte, len(data))
+	dst = make([]byte, len(data))
 	bs := block.BlockSize()
 	switch c.Mode {
 	case "ECB":
-		dst := text
 		for len(data) > 0 {
 			block.Decrypt(dst, data[:bs])
 			data = data[bs:]
 			dst = dst[bs:]
 		}
 	case "CBC":
-		cipher.NewCBCDecrypter(block, iv).CryptBlocks(text, data)
+		cipher.NewCBCDecrypter(block, c.IV).CryptBlocks(dst, data)
 	case "CTR":
-		cipher.NewCTR(block, iv).XORKeyStream(text, data)
+		cipher.NewCTR(block, c.IV).XORKeyStream(dst, data)
 	case "OFB":
-		cipher.NewOFB(block, iv).XORKeyStream(text, data)
+		cipher.NewOFB(block, c.IV).XORKeyStream(dst, data)
 	case "CFB":
-		cipher.NewCFBDecrypter(block, iv).XORKeyStream(text, data)
+		cipher.NewCFBDecrypter(block, c.IV).XORKeyStream(dst, data)
 	}
-	return c.unpadding(text), nil
+	return c.unpadding(dst), nil
 }
