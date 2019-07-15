@@ -81,6 +81,24 @@ func (g Geo) Points() []Point {
 	return points
 }
 
+// Copy CopyGeo
+func (g Geo) Copy() Geo {
+	var g1 Geo
+	g1.Type = g.Type
+	g1.Coords = make([][][][]float64, len(g.Coords))
+	for i, a := range g.Coords {
+		g1.Coords[i] = make([][][]float64, len(a))
+		for j, b := range a {
+			g1.Coords[i][j] = make([][]float64, len(b))
+			for k, c := range b {
+				g1.Coords[i][j][k] = make([]float64, len(c))
+				copy(g1.Coords[i][j][k], c)
+			}
+		}
+	}
+	return g1
+}
+
 //===============================================================================
 
 // FromWKT 解析WKT为Geo
@@ -284,13 +302,11 @@ func (g Geo) Box() []float64 {
 }
 
 // IsClockwise  Green公式判断顺时针
-// isClockwise  Green公式判断顺时针
-func isClockwise(lnglats [][]float64) bool {
+func IsClockwise(latlngs [][]float64) bool {
 	d := 0.0
-	n := len(lnglats)
+	n := len(latlngs)
 	for i := 0; i < n-1; i++ {
-		d += -0.5 * (lnglats[i][1] + lnglats[i+1][1]) * (lnglats[i+1][0] - lnglats[i][0])
-		//d+= －0.5*(y[i+1]+y[i])*(x[i+1]-x[i])
+		d += -0.5 * (latlngs[i][0] + latlngs[i+1][0]) * (latlngs[i+1][1] - latlngs[i][1])
 	}
 	if d > 0 {
 		return false //counter clockwise
