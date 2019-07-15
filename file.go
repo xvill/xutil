@@ -208,10 +208,10 @@ func FileCopy(src, dest string) error {
 	if err != nil {
 		return err
 	}
-	return copy(src, dest, info)
+	return _copy(src, dest, info)
 }
 
-func copy(src, dest string, info os.FileInfo) error {
+func _copy(src, dest string, info os.FileInfo) error {
 	if info.Mode()&os.ModeSymlink != 0 {
 		return linkcopy(src, dest, info)
 	}
@@ -261,7 +261,7 @@ func dircopy(srcdir, destdir string, info os.FileInfo) error {
 
 	for _, content := range contents {
 		cs, cd := filepath.Join(srcdir, content.Name()), filepath.Join(destdir, content.Name())
-		if err := copy(cs, cd, content); err != nil {
+		if err := _copy(cs, cd, content); err != nil {
 			// If any error, exit immediately
 			return err
 		}
