@@ -255,8 +255,8 @@ func (g Geo) PointFunc(f func(lon, lat float64) (float64, float64)) {
 	}
 }
 
-// ReverseLngLat 转换Lat,Lng 位置
-func (g Geo) ReverseLngLat() {
+// FlipCoordinates 转换Lat,Lng
+func (g Geo) FlipCoordinates() {
 	f := func(lon, lat float64) (float64, float64) { return lat, lon }
 	g.PointFunc(f)
 }
