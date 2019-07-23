@@ -1,13 +1,8 @@
 package xutil
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
-	"net/http"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 // ToFixed 浮点数保留
@@ -29,7 +24,6 @@ func ToFixed(f float64, n int) float64 {
 	https://github.com/wandergis/coordtransform         javascript版本
 	https://github.com/wandergis/coordTransform_py      python版本
 	https://github.com/FreeGIS/postgis_LayerTransform   postgre版本
-	https://github.com/googollee/eviltransform          多种版本
 */
 const (
 	_pi  = 3.14159265358979324    //圆周率
@@ -237,55 +231,6 @@ func PointAt(lon, lat, dist, azimuth float64) (float64, float64) {
 	return Degrees(λ2), Degrees(φ2)
 }
 
-// AmapGeocode 高德解析地址为经纬度
-func AmapGeocode(ak, address string) (poi map[string]string, err error) {
-	url := fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?key=%s&address=%s", ak, address)
-	resp, err := http.Get(url)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	info := jsoniter.Get(body, "info").ToString()
-	if info != "OK" {
-		return poi, errors.New(info)
-	}
-	poi = make(map[string]string, 6)
-	poi["formatted_address"] = jsoniter.Get(body, "geocodes", 0, "formatted_address").ToString()
-	poi["province"] = jsoniter.Get(body, "geocodes", 0, "province").ToString()
-	poi["citycode"] = jsoniter.Get(body, "geocodes", 0, "citycode").ToString()
-	poi["city"] = jsoniter.Get(body, "geocodes", 0, "city").ToString()
-	poi["district"] = jsoniter.Get(body, "geocodes", 0, "district").ToString()
-	poi["location"] = jsoniter.Get(body, "geocodes", 0, "location").ToString()
-	return poi, nil
-}
-
-// BdmapGeocode 百度解析地址为经纬度
-func BdmapGeocode(ak, address string) (poi map[string]string, err error) {
-	url := fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", ak, address)
-	resp, err := http.Get(url)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	info := jsoniter.Get(body, "status").ToString()
-	if info != "0" {
-		msg := jsoniter.Get(body, "message").ToString()
-		return poi, errors.New(msg)
-	}
-	poi = make(map[string]string, 6)
-	poi["lng"] = jsoniter.Get(body, "result", "location", "lng").ToString()
-	poi["lat"] = jsoniter.Get(body, "result", "location", "lat").ToString()
-	return poi, nil
-}
-
 //===============================================================================
 /*** 墨卡托坐标体系
 https://en.wikipedia.org/wiki/Web_Mercator
@@ -293,6 +238,7 @@ https://en.wikipedia.org/wiki/Tile_Map_Service 瓦片地图服务
 https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 https://github.com/CntChen/tile-lnglat-transform 提供了高德、百度、谷歌和腾讯地图的经纬度坐标与瓦片坐标的相互转换
 https://lbs.amap.com/api/javascript-api/reference/map/  高德地图层级
+http://lbsyun.baidu.com/index.php?title=webapi/guide/changeposition  百度API坐标转换
 https://github.com/davvo/mercator
 ****/
 
