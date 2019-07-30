@@ -1,10 +1,12 @@
 package xutil
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -112,4 +114,37 @@ func (m MapAPI) BdmapGeoCode(address string) (poi map[string]string, err error) 
 	poi["lng"] = jsoniter.Get(body, "result", "location", "lng").ToString()
 	poi["lat"] = jsoniter.Get(body, "result", "location", "lat").ToString()
 	return poi, nil
+}
+
+// mocator := "4|13534914.0122,3645387.5227;13535422.4951,3645834.93158|1-13534914.0122,3645542.22157,13534919.2537,3645555.85957,13535111.9804,3645672.21552,13535163.1497,3645713.32995;"
+
+//BmapMocator  百度墨卡托解析
+func (m MapAPI) BmapMocator(mocator string) string {
+	if len(mocator) <= 0 {
+		return ""
+	}
+	geos := strings.Split(mocator, "|")
+	plm := strings.Split(geos[2], ";")
+	geo := ""
+	if geos[0] == "4" {
+		for i := 0; i < len(plm); i++ {
+			geoPaths := strings.Split(plm[i], "-")
+			if geoPaths[0] == "1" {
+				geo = geoPaths[1]
+			}
+		}
+	}
+
+	// 墨卡托坐标解析
+	var sb bytes.Buffer
+	sb.WriteString("LINESTRING (")
+	geoPolyline := strings.Split(geo, ",")
+	for i := 0; i < len(geoPolyline); i = i + 2 {
+		x, _ := strconv.ParseFloat(geoPolyline[i], 64)
+		y, _ := strconv.ParseFloat(geoPolyline[i+1], 64)
+		lng, lat := MercatorToBd09(x, y)
+		sb.WriteString(fmt.Sprintf("%g %g,", lng, lat))
+	}
+	sb.Bytes()[sb.Len()-1] = ')'
+	return sb.String()
 }
