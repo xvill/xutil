@@ -7,9 +7,21 @@ import (
 	"github.com/gonum/floats"
 )
 
+//===============================================================================
+
 //Round Round
 func Round(x float64, prec int) float64 {
 	return floats.Round(x, prec)
+}
+
+//PointRound6 PointRound6
+func PointRound6(x, y float64) (float64, float64) {
+	return floats.Round(x, 6), floats.Round(y, 6)
+}
+
+//PointRound7 PointRound7
+func PointRound7(x, y float64) (float64, float64) {
+	return floats.Round(x, 7), floats.Round(y, 7)
 }
 
 //PointRound8 PointRound8
