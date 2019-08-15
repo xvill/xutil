@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -127,7 +128,11 @@ func FromWKT(wkt string) (g Geo, err error) {
 			flag = false
 		}
 	}
+
 	_coordinates := retstr.String()
+	if _coordinates == "[]" {
+		return g, errors.New(wkt + " empty coordinates")
+	}
 	_type = strings.NewReplacer("POINT", "Point", "LINESTRING", "LineString", "MULTILINESTRING", "MultiLineString",
 		"POLYGON", "Polygon", "MULTIPOLYGON", "MultiPolygon", "MULTIPOINT", "MultiPoint").Replace(strings.ToUpper(_type))
 
@@ -255,7 +260,7 @@ func (g Geo) PointFunc(f func(lon, lat float64) (float64, float64)) {
 	}
 }
 
-// FlipCoordinates 转换Lat,Lng
+// FlipCoordinates 转换Lat,Lng 位置
 func (g Geo) FlipCoordinates() {
 	f := func(lon, lat float64) (float64, float64) { return lat, lon }
 	g.PointFunc(f)
@@ -274,6 +279,11 @@ func (g Geo) Gcj2bd() {
 // Wgs2bd 经纬度坐标系转换 wgs->BD09
 func (g Geo) Wgs2bd() {
 	g.PointFunc(Wgs2bd)
+}
+
+// PointRound8 PointRound8
+func (g Geo) PointRound8() {
+	g.PointFunc(PointRound8)
 }
 
 // Box 方框边界 minx, miny, maxx, maxy
