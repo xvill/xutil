@@ -3,15 +3,19 @@ package xutil
 import (
 	"fmt"
 	"math"
+
+	"github.com/gonum/floats"
 )
 
-// ToFixed 浮点数保留
-func ToFixed(f float64, n int) float64 {
-	shift := math.Pow10(n)
-	fv := 0.0000000001 + f //对浮点数产生.xxx999999999 计算不准进行处理
-	return math.Floor(fv*shift+.5) / shift
+//Round Round
+func Round(x float64, prec int) float64 {
+	return floats.Round(x, prec)
 }
 
+//PointRound8 PointRound8
+func PointRound8(x, y float64) (float64, float64) {
+	return floats.Round(x, 8), floats.Round(y, 8)
+}
 
 //===============================================================================
 /*
@@ -84,7 +88,7 @@ func Wgs2gcj(lon, lat float64) (float64, float64) {
 	dlon, dlat := _offset(lon, lat)
 	mglat := lat + dlat
 	mglon := lon + dlon
-	return ToFixed(mglon, 7), ToFixed(mglat, 7)
+	return PointRound8(mglon, mglat)
 }
 
 // Gcj2Wgs  GCJ坐标系 ----> WGS坐标系
@@ -92,7 +96,7 @@ func Gcj2Wgs(lon, lat float64) (float64, float64) {
 	dlon, dlat := _offset(lon, lat)
 	mglat := lat - dlat
 	mglon := lon - dlon
-	return ToFixed(mglon, 7), ToFixed(mglat, 7)
+	return PointRound8(mglon, mglat)
 }
 
 // Gcj2bd  火星(GCJ-02)坐标系 ----> 百度(BD-09)坐标系
@@ -102,7 +106,7 @@ func Gcj2bd(lon, lat float64) (float64, float64) {
 	theta := math.Atan2(y, x) + 0.000003*math.Cos(x*_xpi)
 	bdLon := z*math.Cos(theta) + 0.0065
 	bdLat := z*math.Sin(theta) + 0.006
-	return ToFixed(bdLon, 7), ToFixed(bdLat, 7)
+	return PointRound8(bdLon, bdLat)
 }
 
 // Bd2gcj  百度(BD-09)坐标系 ----> 火星(GCJ-02)坐标系
@@ -112,21 +116,19 @@ func Bd2gcj(lon, lat float64) (float64, float64) {
 	theta := math.Atan2(y, x) - 0.000003*math.Cos(x*_xpi)
 	ggLon := z * math.Cos(theta)
 	ggLat := z * math.Sin(theta)
-	return ToFixed(ggLon, 7), ToFixed(ggLat, 7)
+	return PointRound8(ggLon, ggLat)
 }
 
 // Wgs2bd WGS坐标系 ----> 百度坐标系
 func Wgs2bd(lon, lat float64) (float64, float64) {
 	x, y := Wgs2gcj(lon, lat)
-	lng, lat := Gcj2bd(x, y)
-	return lng, lat
+	return Gcj2bd(x, y)
 }
 
 // Bd2Wgs 百度坐标系 ----> WGS坐标系
 func Bd2Wgs(lon, lat float64) (float64, float64) {
 	x, y := Bd2gcj(lon, lat)
-	lng, lat := Gcj2Wgs(x, y)
-	return lng, lat
+	return Gcj2Wgs(x, y)
 }
 
 //===============================================================================
@@ -139,10 +141,12 @@ http://en.wikipedia.org/wiki/Vincenty's_formulae	Vincenty
 Speed: Law of Cosines > Haversine > Vincenty
 ***/
 
+//Radians Radians
 func Radians(r float64) float64 {
 	return r * math.Pi / 180.0
 }
 
+//Degrees Degrees
 func Degrees(d float64) float64 {
 	return d * 180.0 / math.Pi
 }
