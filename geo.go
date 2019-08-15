@@ -281,6 +281,15 @@ func (g Geo) Wgs2bd() {
 	g.PointFunc(Wgs2bd)
 }
 
+// PointRound6 PointRound6
+func (g Geo) PointRound6() {
+	g.PointFunc(PointRound6)
+}
+// PointRound7 PointRound7
+func (g Geo) PointRound7() {
+	g.PointFunc(PointRound7)
+}
+
 // PointRound8 PointRound8
 func (g Geo) PointRound8() {
 	g.PointFunc(PointRound8)
