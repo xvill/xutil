@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,18 +14,22 @@ type Geo struct {
 	Type   string
 	Coords [][][][]float64
 }
-type Line struct {
-	X1 float64
-	Y1 float64
-	X2 float64
-	Y2 float64
-}
 
-//===============================================================================
 type Point struct {
 	X float64
 	Y float64
 }
+
+func (p Point) String() string {
+	return fmt.Sprintf("%g,%g", p.X, p.Y)
+}
+
+type Line struct {
+	P1 Point
+	P2 Point
+}
+
+//===============================================================================
 
 func NewPoint(x, y string) (p Point, err error) {
 	m, err := strconv.ParseFloat(x, 64)
@@ -54,17 +59,13 @@ func (p *Point) Gcj2bd() {
 	p.X, p.Y = Gcj2bd(p.X, p.Y)
 }
 
-func (p Point) String() string {
-	return fmt.Sprintf("%g,%g", p.X, p.Y)
-}
-
 //===============================================================================
 
 func (g Geo) Lines() []Line {
 	lines := []Line{}
 	for _, a := range g.Coords {
 		for _, b := range a {
-			lines = append(lines, Line{b[0][0], b[0][1], b[1][0], b[1][1]})
+			lines = append(lines, Line{Point{b[0][0], b[0][1]}, Point{b[1][0], b[1][1]}})
 		}
 	}
 	return lines
@@ -79,6 +80,24 @@ func (g Geo) Points() []Point {
 		}
 	}
 	return points
+}
+
+// Copy CopyGeo
+func (g Geo) Copy() Geo {
+	var g1 Geo
+	g1.Type = g.Type
+	g1.Coords = make([][][][]float64, len(g.Coords))
+	for i, a := range g.Coords {
+		g1.Coords[i] = make([][][]float64, len(a))
+		for j, b := range a {
+			g1.Coords[i][j] = make([][]float64, len(b))
+			for k, c := range b {
+				g1.Coords[i][j][k] = make([]float64, len(c))
+				copy(g1.Coords[i][j][k], c)
+			}
+		}
+	}
+	return g1
 }
 
 //===============================================================================
@@ -109,7 +128,11 @@ func FromWKT(wkt string) (g Geo, err error) {
 			flag = false
 		}
 	}
+
 	_coordinates := retstr.String()
+	if _coordinates == "[]" {
+		return g, errors.New(wkt + " empty coordinates")
+	}
 	_type = strings.NewReplacer("POINT", "Point", "LINESTRING", "LineString", "MULTILINESTRING", "MultiLineString",
 		"POLYGON", "Polygon", "MULTIPOLYGON", "MultiPolygon", "MULTIPOINT", "MultiPoint").Replace(strings.ToUpper(_type))
 
@@ -119,7 +142,6 @@ func FromWKT(wkt string) (g Geo, err error) {
 
 // FromGeoJSON 解析GeoJSON为Geo
 func FromGeoJSON(geojson string) (g Geo, err error) {
-
 	type GeoJSON struct {
 		Type   string          `json:"type"`
 		Coords json.RawMessage `json:"coordinates"`
@@ -226,52 +248,51 @@ func (g Geo) ToWKT() (wkt string) {
 	return
 }
 
-// ReserveLngLat 转换Lat,Lng 位置
-func (g Geo) ReverseLngLat() {
+// PointFunc 对所有点应用函数
+func (g Geo) PointFunc(f func(lon, lat float64) (float64, float64)) {
 	coords := g.Coords
 	for _, a := range coords {
 		for _, b := range a {
 			for _, c := range b {
-				c[0], c[1] = c[1], c[0]
+				c[0], c[1] = f(c[0], c[1])
 			}
 		}
 	}
+}
+
+// FlipCoordinates 转换Lat,Lng 位置
+func (g Geo) FlipCoordinates() {
+	f := func(lon, lat float64) (float64, float64) { return lat, lon }
+	g.PointFunc(f)
 }
 
 // Wgs2gcj 经纬度坐标系转换 wgs-> gcj
 func (g Geo) Wgs2gcj() {
-	coords := g.Coords
-	for _, a := range coords {
-		for _, b := range a {
-			for _, c := range b {
-				c[0], c[1] = Wgs2gcj(c[0], c[1])
-			}
-		}
-	}
+	g.PointFunc(Wgs2gcj)
 }
 
 // Gcj2bd 经纬度坐标系转换 gcj->BD09
 func (g Geo) Gcj2bd() {
-	coords := g.Coords
-	for _, a := range coords {
-		for _, b := range a {
-			for _, c := range b {
-				c[0], c[1] = Gcj2bd(c[0], c[1])
-			}
-		}
-	}
+	g.PointFunc(Gcj2bd)
 }
 
 // Wgs2bd 经纬度坐标系转换 wgs->BD09
 func (g Geo) Wgs2bd() {
-	coords := g.Coords
-	for _, a := range coords {
-		for _, b := range a {
-			for _, c := range b {
-				c[0], c[1] = Wgs2bd(c[0], c[1])
-			}
-		}
-	}
+	g.PointFunc(Wgs2bd)
+}
+
+// PointRound6 PointRound6
+func (g Geo) PointRound6() {
+	g.PointFunc(PointRound6)
+}
+// PointRound7 PointRound7
+func (g Geo) PointRound7() {
+	g.PointFunc(PointRound7)
+}
+
+// PointRound8 PointRound8
+func (g Geo) PointRound8() {
+	g.PointFunc(PointRound8)
 }
 
 // Box 方框边界 minx, miny, maxx, maxy
@@ -297,4 +318,17 @@ func (g Geo) Box() []float64 {
 		}
 	}
 	return []float64{minx, miny, maxx, maxy}
+}
+
+// IsClockwise  Green公式判断顺时针
+func IsClockwise(latlngs [][]float64) bool {
+	d := 0.0
+	n := len(latlngs)
+	for i := 0; i < n-1; i++ {
+		d += -0.5 * (latlngs[i][0] + latlngs[i+1][0]) * (latlngs[i+1][1] - latlngs[i][1])
+	}
+	if d > 0 {
+		return false //counter clockwise
+	}
+	return true // clockwise
 }
