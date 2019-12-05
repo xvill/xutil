@@ -295,9 +295,9 @@ func Bd09ToTile(lng, lat float64, zoom int) (int, int) {
 func MercatorToBd09(x, y float64) (float64, float64) {
 	cF := []float64{}
 	x = math.Abs(x)
-	y = math.Abs(y)
+	yTemp := math.Abs(y)
 	for cE := 0; cE < len(_mcband); cE++ {
-		if y >= _mcband[cE] {
+		if yTemp >= _mcband[cE] {
 			cF = _mc2ll[cE]
 			break
 		}
@@ -309,10 +309,10 @@ func MercatorToBd09(x, y float64) (float64, float64) {
 func Bd09ToMercator(lng, lat float64) (float64, float64) {
 	getLoop := func(lng float64, min, max float64) float64 {
 		for lng > max {
-			lng = lng - max - min
+			lng = lng - math.Abs(max-min)
 		}
 		for lng < min {
-			lng = lng + max - min
+			lng = lng + math.Abs(max-min)
 		}
 		return lng
 	}
@@ -329,7 +329,7 @@ func Bd09ToMercator(lng, lat float64) (float64, float64) {
 			break
 		}
 	}
-	if len(cE) > 0 {
+	if len(cE) == 0 {
 		for i := len(_llband) - 1; i >= 0; i-- {
 			if lat <= -_llband[i] {
 				cE = _ll2mc[i]
@@ -356,7 +356,7 @@ func yr(x, y float64, cE []float64) (float64, float64) {
 
 //===============================================================================
 
-func demogis() {
+func demo() {
 	lng, lat := 121.5012091398, 31.2355502882 //上海中心大厦gps
 	bdlng, bdlat := Wgs2bd(lng, lat)          //31.239186 121.512245
 	// lng, lat := MercatorToBd09(13525446.26, 3639969.64)
