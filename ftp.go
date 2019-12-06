@@ -18,7 +18,7 @@ type Ftp struct {
 	Timeout     time.Duration
 }
 
-func (c Ftp) OpenFTP() (err error) {
+func (c *Ftp) OpenFTP() (err error) {
 	if c.Timeout == 0 {
 		c.Timeout = 10*time.Second
 	}
