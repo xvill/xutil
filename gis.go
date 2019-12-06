@@ -356,7 +356,7 @@ func yr(x, y float64, cE []float64) (float64, float64) {
 
 //===============================================================================
 
-func demo() {
+func gisdemo() {
 	lng, lat := 121.5012091398, 31.2355502882 //上海中心大厦gps
 	bdlng, bdlat := Wgs2bd(lng, lat)          //31.239186 121.512245
 	// lng, lat := MercatorToBd09(13525446.26, 3639969.64)
