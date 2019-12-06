@@ -6,23 +6,32 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jlaffaye/ftp"
+	ftp "github.com/jlaffaye/ftp"
 )
 
 type Ftp struct {
-	Conn *ftp.ServerConn
+	Host        string
+	User        string
+	Pwd         string
+	Conn        *ftp.ServerConn
+	DisableEPSV bool
+	Timeout     time.Duration
 }
 
-func OpenFtp(host, user, pwd string, timeout time.Duration) (Ftp, error) {
-	conn, err := ftp.DialTimeout(host, timeout)
-	if err != nil {
-		return Ftp{Conn: conn}, err
+func (c Ftp) OpenFTP() (err error) {
+	if c.Timeout == 0 {
+		c.Conn, err = ftp.Dial(c.Host, ftp.DialWithDisabledEPSV(c.DisableEPSV))
+	} else {
+		c.Conn, err = ftp.Dial(c.Host, ftp.DialWithDisabledEPSV(c.DisableEPSV), ftp.DialWithTimeout(c.Timeout))
 	}
-	err = conn.Login(user, pwd)
 	if err != nil {
-		return Ftp{Conn: conn}, err
+		return err
 	}
-	return Ftp{Conn: conn}, nil
+	err = c.Conn.Login(c.User, c.Pwd)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c Ftp) NameList(pattern string) (ftpfiles []string) {
@@ -65,21 +74,19 @@ func (c Ftp) Files(files []string) (dat map[string][]byte, err error) {
 	return dat, nil
 }
 
-func (c Ftp) Logout() error {
-	return c.Conn.Logout()
+func (c Ftp) FileFTP(pattern []string) (files map[string][]byte, err error) {
+	err = c.OpenFTP()
+	if err != nil {
+		return nil, err
+	}
+	files, err = c.FilesByPattern(pattern)
+
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
 }
 
-func FileFTP(host, user, pwd string, pattern []string) (files map[string][]byte, err error) {
-	ftp, err := OpenFtp(host, user, pwd, 10*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	files, err = ftp.FilesByPattern(pattern)
-
-	if err != nil {
-		return nil, err
-	}
-	ftp.Logout()
-
-	return files, nil
+func (c Ftp) Logout() error {
+	return c.Conn.Logout()
 }
