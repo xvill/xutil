@@ -20,10 +20,9 @@ type Ftp struct {
 
 func (c Ftp) OpenFTP() (err error) {
 	if c.Timeout == 0 {
-		c.Conn, err = ftp.Dial(c.Host, ftp.DialWithDisabledEPSV(c.DisableEPSV))
-	} else {
-		c.Conn, err = ftp.Dial(c.Host, ftp.DialWithDisabledEPSV(c.DisableEPSV), ftp.DialWithTimeout(c.Timeout))
+		c.Timeout = 10*time.Second
 	}
+	c.Conn, err = ftp.Dial(c.Host, ftp.DialWithDisabledEPSV(c.DisableEPSV), ftp.DialWithTimeout(c.Timeout))
 	if err != nil {
 		return err
 	}
