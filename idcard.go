@@ -133,7 +133,7 @@ func NewIDCard(id string) (c IDCard, err error) {
 	return c, nil
 }
 
-func demo() {
+func idcarddemo() {
 	fmt.Println(ChinaAddr["140522"])
 	fmt.Println(ID15to18("210212831019104"))
 	fmt.Println(NewIDCard("210212831019104"))
