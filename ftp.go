@@ -2,8 +2,9 @@ package xutil
 
 import (
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	ftp4go "github.com/shenshouer/ftp4go"
@@ -55,14 +56,13 @@ func (c XFtp) NameList() (ftpfiles []string) {
 	return ftpfiles
 }
 
-
 func (c XFtp) DownloadFiles() (dat map[string]string, err error) {
-	files:=c.NameList()
+	files := c.NameList()
 	dat = make(map[string]string, 0)
-	if c.LocalFilePrefix != ""{
-		x,dir,_:= IsFileExist(c.LocalFilePrefix)
-		if x&&dir{
-			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix +string(filepath.Separator)) + string(filepath.Separator)
+	if c.LocalFilePrefix != "" {
+		x, dir, _ := IsFileExist(c.LocalFilePrefix)
+		if x && dir {
+			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix+string(filepath.Separator)) + string(filepath.Separator)
 		}
 	}
 	fmt.Println("DownloadFiles begin")
@@ -71,7 +71,7 @@ func (c XFtp) DownloadFiles() (dat map[string]string, err error) {
 			c.LocalFilePrefix = time.Now().Format("20060102150405") + "_"
 		}
 		localpath := c.LocalFilePrefix + filepath.Base(file)
-		fmt.Println("DownloadFile "+file+" to "+localpath)
+		fmt.Println("DownloadFile " + file + " to " + localpath)
 		err = c.Conn.DownloadFile(file, localpath, false)
 		if err != nil {
 			return dat, err
