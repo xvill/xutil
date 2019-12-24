@@ -42,15 +42,17 @@ func (c *XFtp) Connect() (err error) {
 }
 
 func (c XFtp) NameList() (ftpfiles []string) {
-	files, err := c.Conn.Nlst(filepath.Dir(c.FilePattern))
+	xdir, xfile := filepath.Split(c.FilePattern)
+	files, err := c.Conn.Nlst(xdir)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
 	for _, v := range files {
-		if ok, _ := filepath.Match(c.FilePattern, v); ok {
-			ftpfiles = append(ftpfiles, v)
+		v = filepath.Base(v)
+		if ok, _ := filepath.Match(xfile, v); ok {
+			ftpfiles = append(ftpfiles, filepath.Join(xdir, v))
 		}
 	}
 	return ftpfiles
