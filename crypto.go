@@ -15,6 +15,11 @@ import (
 //Hash Hash
 type Hash struct{ Data string }
 
+//NewHash NewHash
+func NewHash(dat string) Hash {
+	return Hash{Data: dat}
+}
+
 //MD5  MD5
 func (h Hash) MD5() string {
 	c := md5.New()
