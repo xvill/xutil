@@ -5,8 +5,31 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/md5"
+	"crypto/sha1"
+	"encoding/hex"
 )
 
+//================================================================================================
+
+//Hash Hash
+type Hash struct{ Data string }
+
+//MD5  MD5
+func (h Hash) MD5() string {
+	c := md5.New()
+	c.Write([]byte(h.Data))
+	return hex.EncodeToString(c.Sum(nil))
+}
+
+//SHA1  SHA1
+func (h Hash) SHA1() string {
+	c := sha1.New()
+	c.Write([]byte(h.Data))
+	return hex.EncodeToString(c.Sum(nil))
+}
+
+//================================================================================================
 //明文补码算法
 func pKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
