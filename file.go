@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/csv"
 	"errors"
+	"hash"
 	"io"
 	"io/ioutil"
 	"log"
@@ -174,32 +175,38 @@ func FileSize(fname string) int64 {
 	return file.Size()
 }
 
-func FileMD5(fname string) ([]byte, error) {
+// FileHash Hash
+func FileHash(htype string, fname string) ([]byte, error) {
 	file, err := os.Open(fname)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
+	var h hash.Hash
+	switch htype {
+	case "SHA1":
+		h = sha1.New()
 
-	h := md5.New()
+	case "MD5":
+		h = md5.New()
+	default:
+		h = md5.New()
+	}
+
 	if _, err := io.Copy(h, file); err != nil {
 		return nil, err
 	}
 	return h.Sum(nil), nil
 }
 
+// FileSHA1 SHA1
 func FileSHA1(fname string) ([]byte, error) {
-	f, err := os.Open(fname)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
+	return FileHash("SHA1", fname)
+}
 
-	h := sha1.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return nil, err
-	}
-	return h.Sum(nil), nil
+// FileMD5  MD5
+func FileMD5(fname string) ([]byte, error) {
+	return FileHash("MD5", fname)
 }
 
 // FileCopy 文件/文件夹/链接复制
