@@ -129,7 +129,7 @@ func (m *MapAPI) _codeAmapAddr(addr interface{}, cnt int) {
 }
 
 // AmapGeoCodeALL 高德解析地址为经纬度
-func (m *MapAPI) AmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]map[string]string) {
+func (m *MapAPI) AmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]Poi) {
 	p, _ := ants.NewPoolWithFunc(poolsize, func(addr interface{}) {
 		m._codeAmapAddr(addr, 0)
 		m.wg.Done()
@@ -142,11 +142,10 @@ func (m *MapAPI) AmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrs
 	}
 	m.wg.Wait()
 
-	addrsAll = make(map[string]map[string]string, 0)
+	addrsAll = make(map[string]Poi, 0)
 	m.SM.Range(func(k, v interface{}) bool {
 		addr := k.(string)
-		geo := v.(map[string]string)
-		addrsAll[addr] = geo
+		addrsAll[addr] = v.(Poi)
 		return true
 	})
 	return addrsAll
@@ -228,7 +227,7 @@ func (m *MapAPI) _codeBdmapAddr(addr interface{}, cnt int) {
 }
 
 // BdmapGeoCodeALL 百度解析地址为经纬度
-func (m *MapAPI) BdmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]map[string]string) {
+func (m *MapAPI) BdmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]Poi) {
 	p, _ := ants.NewPoolWithFunc(poolsize, func(addr interface{}) {
 		m._codeBdmapAddr(addr, 0)
 		m.wg.Done()
@@ -241,11 +240,10 @@ func (m *MapAPI) BdmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addr
 	}
 	m.wg.Wait()
 
-	addrsAll = make(map[string]map[string]string, 0)
+	addrsAll = make(map[string]Poi, 0)
 	m.SM.Range(func(k, v interface{}) bool {
 		addr := k.(string)
-		geo := v.(map[string]string)
-		addrsAll[addr] = geo
+		addrsAll[addr] = v.(Poi)
 		return true
 	})
 	return addrsAll
