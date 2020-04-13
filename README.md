@@ -84,6 +84,13 @@ func IDisValid(id string) bool {} 	// IDisValid 校验身份证第18位是否正
 func IDisPattern(id string) bool {} 	// IDisPattern 二代身份证正则表达式
 func NewIDCard(id string) (c IDCard, err error) {} 	// NewIDCard  获取身份证信息
 
+
+/**地址解析**/
+func NewMapAPI(ak string) MapAPI {}  //高德、百度地址解析封装
+func (m MapAPI) AmapGeoCode(address string) (poi Poi) {} //高德地址解析
+func (m MapAPI) BdmapGeoCode(address string) (poi Poi) {} //百度地址解析
+func (m *MapAPI) AmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]Poi) {} //多线程解析
+func (m *MapAPI) BdmapGeoCodeALL(addrsMap map[string]string, poolsize int) (addrsAll map[string]Poi) {} //多线程解析
 ```
 
 ## reference
