@@ -171,7 +171,12 @@ func (m MapAPI) BdmapGeoCode(address string) (poi Poi) {
 	}
 
 	address = strings.Join(strings.Fields(address), "")
-	url := fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", m.AK, address)
+	APIURL := ""
+	if m.LimitCityShanghai {
+		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s&city=上海市", m.AK, address)
+	} else {
+		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", m.AK, address)
+	}
 	resp, err := http.Get(url)
 	if err != nil {
 		poi.Status = -1
