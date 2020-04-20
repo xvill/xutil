@@ -35,7 +35,7 @@ type MapAPI struct {
 }
 
 func NewMapAPI(ak string) MapAPI {
-	return MapAPI{AK: ak, LimitCityShanghai: true}
+	return MapAPI{AK: ak, LimitCity: "上海市"}
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -63,8 +63,8 @@ func (m MapAPI) AmapGeoCode(address string) (poi Poi) {
 	// https://lbs.amap.com/api/webservice/guide/api/georegeo
 	address = strings.Join(strings.Fields(address), "")
 	APIURL := ""
-	if m.LimitCityShanghai {
-		APIURL = fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?city=上海&citylimit=true&key=%s&address=%s", m.AK, address)
+	if m.LimitCity != "" {
+		APIURL = fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?key=%s&address=%s&city=%s&citylimit=true", m.AK, address, m.LimitCity)
 	} else {
 		APIURL = fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?key=%s&address=%s", m.AK, address)
 	}
@@ -172,8 +172,8 @@ func (m MapAPI) BdmapGeoCode(address string) (poi Poi) {
 
 	address = strings.Join(strings.Fields(address), "")
 	APIURL := ""
-	if m.LimitCityShanghai {
-		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s&city=上海市", m.AK, address)
+	if m.LimitCity != "" {
+		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s&city=%s", m.AK, address, m.LimitCity)
 	} else {
 		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", m.AK, address)
 	}
