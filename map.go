@@ -28,10 +28,10 @@ type Poi struct {
 }
 
 type MapAPI struct {
-	AK                string
-	LimitCityShanghai bool
-	SM                sync.Map
-	wg                sync.WaitGroup
+	AK        string
+	LimitCity string
+	SM        sync.Map
+	wg        sync.WaitGroup
 }
 
 func NewMapAPI(ak string) MapAPI {
@@ -177,7 +177,7 @@ func (m MapAPI) BdmapGeoCode(address string) (poi Poi) {
 	} else {
 		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s", m.AK, address)
 	}
-	resp, err := http.Get(url)
+	resp, err := http.Get(APIURL)
 	if err != nil {
 		poi.Status = -1
 		poi.Message = err.Error()
