@@ -119,15 +119,13 @@ func (c *XSFtp) NameList() (ftpfiles []string) {
 	return ftpfiles
 }
 
-func (c *XSFtp) DownloadFiles() (dat map[string]string, err error) {
-	files := c.NameList()
+func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
 	if c.LocalFilePrefix != "" {
 		x, dir, _ := IsFileExist(c.LocalFilePrefix)
 		if x && dir {
 			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix+string(filepath.Separator)) + string(filepath.Separator)
 		}
-	}
 	fmt.Println("DownloadFiles begin")
 	for _, file := range files {
 		if c.LocalFilePrefix == "" {
@@ -186,7 +184,7 @@ func (c *XSFtp) ConnectAndDownload() (files map[string]string, err error) {
 		return nil, err
 	}
 	defer c.Logout()
-	files, err = c.DownloadFiles()
+	files, err = c.DownloadFiles(c.NameList())
 	if err != nil {
 		return nil, err
 	}
