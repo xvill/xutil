@@ -126,6 +126,7 @@ func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error)
 		if x && dir {
 			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix+string(filepath.Separator)) + string(filepath.Separator)
 		}
+	}
 	fmt.Println("DownloadFiles begin")
 	for _, file := range files {
 		if c.LocalFilePrefix == "" {
@@ -178,6 +179,7 @@ func (c *XSFtp) PutFiles(scpfiles [][2]string) error {
 	}
 	return nil
 }
+
 func (c *XSFtp) ConnectAndDownload() (files map[string]string, err error) {
 	err = c.Connect()
 	if err != nil {
