@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -62,6 +63,8 @@ func (m MapAPI) AmapGeoCode(address string) (poi Poi) {
 
 	// https://lbs.amap.com/api/webservice/guide/api/georegeo
 	address = strings.Join(strings.Fields(address), "")
+	address = url.QueryEscape(address)
+	m.LimitCity = url.QueryEscape(m.LimitCity)
 	APIURL := ""
 	if m.LimitCity != "" {
 		APIURL = fmt.Sprintf("http://restapi.amap.com/v3/geocode/geo?key=%s&address=%s&city=%s&citylimit=true", m.AK, address, m.LimitCity)
@@ -171,6 +174,8 @@ func (m MapAPI) BdmapGeoCode(address string) (poi Poi) {
 	}
 
 	address = strings.Join(strings.Fields(address), "")
+	address = url.QueryEscape(address)
+	m.LimitCity = url.QueryEscape(m.LimitCity)
 	APIURL := ""
 	if m.LimitCity != "" {
 		APIURL = fmt.Sprintf("http://api.map.baidu.com/geocoder/v2/?output=json&ak=%s&address=%s&city=%s", m.AK, address, m.LimitCity)
