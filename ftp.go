@@ -2,6 +2,7 @@ package xutil
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -58,8 +59,7 @@ func (c XFtp) NameList() (ftpfiles []string) {
 	return ftpfiles
 }
 
-func (c XFtp) DownloadFiles() (dat map[string]string, err error) {
-	files := c.NameList()
+func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
 	if c.LocalFilePrefix != "" {
 		x, dir, _ := IsFileExist(c.LocalFilePrefix)
@@ -95,9 +95,76 @@ func (c *XFtp) ConnectAndDownload() (files map[string]string, err error) {
 		return nil, err
 	}
 	defer c.Logout()
-	files, err = c.DownloadFiles()
+	files, err = c.DownloadFiles(c.NameList())
 	if err != nil {
 		return nil, err
 	}
 	return files, nil
+}
+
+//GetFTPFiles 获取 FTP/SFTP 匹配的文件
+func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string, expectfiles []string) (files map[string]string, err error) {
+
+	ftpfiles := make([]string, 0)
+	var xftp XFtp
+	var xsftp XSFtp
+	files = make(map[string]string, 0)
+
+	switch ftptype {
+	case "FTP":
+		xftp = XFtp{Addr: addr,
+			User:            user,
+			Pwd:             pwd,
+			PASV:            pasv,
+			FilePattern:     pattern,
+			LocalFilePrefix: localfileprefix}
+
+		log.Println(xftp.FilePattern, filepath.Dir(xftp.FilePattern))
+		err = xftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xftp.Logout()
+		ftpfiles = xftp.NameList()
+	case "SFTP":
+		xsftp = XSFtp{Addr: addr,
+			User:            user,
+			Pwd:             pwd,
+			FilePattern:     pattern,
+			LocalFilePrefix: localfileprefix}
+
+		log.Println(xsftp.FilePattern, filepath.Dir(xsftp.FilePattern))
+		err = xsftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xsftp.Logout()
+		ftpfiles = xsftp.NameList()
+	}
+	// ------------------------------------------------------------------------------
+	for i := range ftpfiles {
+		ftpfiles[i] = fmt.Sprintf("[%s]%s", addr, ftpfiles[i])
+	}
+
+	getftpfiles := StringsMinus(ftpfiles, expectfiles) // 要下载的文件 = FTP文件名 - 已入库的文件
+
+	for i := range getftpfiles {
+		getftpfiles[i] = strings.TrimPrefix(getftpfiles[i], "["+addr+"]")
+	}
+	// ------------------------------------------------------------------------------
+	xfiles := make(map[string]string, 0)
+
+	switch ftptype {
+	case "FTP":
+		xfiles, err = xftp.DownloadFiles(getftpfiles)
+	case "SFTP":
+		xfiles, err = xsftp.DownloadFiles(getftpfiles)
+	}
+
+	for ftpfile, localfile := range xfiles {
+		files[fmt.Sprintf("[%s]%s", addr, ftpfile)] = localfile
+	}
+	return
 }
