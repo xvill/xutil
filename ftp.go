@@ -42,6 +42,23 @@ func (c *XFtp) Connect() (err error) {
 	return nil
 }
 
+func (c XFtp) MKdir(path string) {
+	xdir, xfile := filepath.Split(path)
+	fname := filepath.Join(xdir, xfile)
+	xdirFiles, _ := c.Conn.Nlst(xdir)
+	for _, v := range xdirFiles {
+		if v == fname {
+			return
+		}
+	}
+	_, err := c.Conn.Mkd(path)
+	if err != nil {
+		c.MKdir(xdir)
+		c.MKdir(fname)
+	}
+	return
+}
+
 func (c XFtp) NameList() (ftpfiles []string) {
 	xdir, xfile := filepath.Split(c.FilePattern)
 	files, err := c.Conn.Nlst(xdir)
@@ -102,6 +119,14 @@ func (c *XFtp) ConnectAndDownload() (files map[string]string, err error) {
 	return files, nil
 }
 
+func (c *XFtp) UploadFiles(files map[string]string, useLineMode bool) (retInfo map[string]error) {
+	retInfo = make(map[string]error, 0)
+	for fname, tname := range files {
+		retInfo[fname] = c.Conn.UploadFile(tname, fname, useLineMode, nil)
+	}
+	return
+}
+
 //GetFTPFiles 获取 FTP/SFTP 匹配的文件
 func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string, expectfiles []string) (files map[string]string, err error) {
 
@@ -149,13 +174,15 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string
 	}
 
 	getftpfiles := StringsMinus(ftpfiles, expectfiles) // 要下载的文件 = FTP文件名 - 已入库的文件
+	if len(getftpfiles) == 0 {                         //没有可下载的文件
+		return
+	}
 
 	for i := range getftpfiles {
 		getftpfiles[i] = strings.TrimPrefix(getftpfiles[i], "["+addr+"]")
 	}
 	// ------------------------------------------------------------------------------
 	xfiles := make(map[string]string, 0)
-
 	switch ftptype {
 	case "FTP":
 		xfiles, err = xftp.DownloadFiles(getftpfiles)
