@@ -230,7 +230,7 @@ func (m *MapAPI) _codeBdmapAddr(addr interface{}, cnt int) {
 	poi := m.BdmapGeoCode(unaddr)
 	if poi.Status != 0 {
 		cnt++
-		m._codeAmapAddr(addr, cnt)
+		m._codeBdmapAddr(addr, cnt)
 	} else {
 		m.SM.Store(unaddr, poi)
 	}
