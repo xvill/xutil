@@ -121,12 +121,16 @@ func (c *XSFtp) NameList() (ftpfiles []string) {
 
 func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
+
 	if c.LocalFilePrefix != "" {
-		x, dir, _ := IsFileExist(c.LocalFilePrefix)
-		if x && dir {
+		err = IsDirsExist([]string{c.LocalFilePrefix}, false)
+		if err == nil {
 			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix+string(filepath.Separator)) + string(filepath.Separator)
+		} else {
+			return dat, err
 		}
 	}
+
 	fmt.Println("DownloadFiles begin")
 	for _, file := range files {
 		if c.LocalFilePrefix == "" {
@@ -159,25 +163,29 @@ func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error)
 	return dat, nil
 }
 
-func (c *XSFtp) PutFiles(scpfiles [][2]string) error {
-	for _, v := range scpfiles {
-		srcFile, err := os.Open(v[0])
+func (c *XSFtp) UploadFiles(files map[string]string) (retInfo map[string]error) {
+	retInfo = make(map[string]error, 0)
+	for fname, tname := range files {
+		srcFile, err := os.Open(fname)
+		retInfo[fname] = err
 		if err != nil {
-			return err
+			continue
 		}
-		dstFile, err := c.SFTP.Create(v[1])
+		dstFile, err := c.SFTP.Create(tname)
+		retInfo[fname] = err
 		if err != nil {
-			return err
+			continue
 		}
 		buf := make([]byte, 1024)
 		_, err = io.CopyBuffer(dstFile, srcFile, buf)
 		srcFile.Close()
 		dstFile.Close()
+		retInfo[fname] = err
 		if err != nil {
-			return err
+			continue
 		}
 	}
-	return nil
+	return
 }
 
 func (c *XSFtp) ConnectAndDownload() (files map[string]string, err error) {
