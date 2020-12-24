@@ -79,12 +79,15 @@ func (c XFtp) NameList() (ftpfiles []string) {
 func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
 	if c.LocalFilePrefix != "" {
-		x, dir, _ := IsFileExist(c.LocalFilePrefix)
-		if x && dir {
+		err = IsDirsExist([]string{c.LocalFilePrefix}, false)
+		if err == nil {
 			c.LocalFilePrefix = filepath.Dir(c.LocalFilePrefix+string(filepath.Separator)) + string(filepath.Separator)
+		} else {
+			return dat, err
 		}
 	}
-	fmt.Println("DownloadFiles begin")
+
+	fmt.Println("DownloadFiles to ", c.LocalFilePrefix)
 	for _, file := range files {
 		if c.LocalFilePrefix == "" {
 			c.LocalFilePrefix = time.Now().Format("20060102150405") + "_"
