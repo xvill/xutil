@@ -87,7 +87,7 @@ func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 		}
 	}
 
-	fmt.Println("DownloadFiles to ", c.LocalFilePrefix)
+	fmt.Println("DownloadFiles begin")
 	for _, file := range files {
 		if c.LocalFilePrefix == "" {
 			c.LocalFilePrefix = time.Now().Format("20060102150405") + "_"
