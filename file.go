@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -57,15 +58,43 @@ func FilePatternLinesCount(fexp string, delim byte) (count int, detail map[strin
 }
 
 //IsFileExist 文件是否存在
-func IsFileExist(path string) (isExist, isDir bool, err error) {
-	fi, err := os.Stat(path)
-	if err == nil {
-		return true, fi.IsDir(), nil
+func IsFilesExist(paths []string) (err error) {
+	s := []string{}
+	for _, fname := range paths {
+		fi, err := os.Stat(path)
+		if err == nil && !fi.IsDir() {
+			continue
+		} else {
+			s = append(s, fname)
+		}
 	}
-	if os.IsNotExist(err) {
-		return false, false, errors.New("no such file or dir")
+	if len(s) == 0 {
+		return nil
 	}
-	return false, false, err
+	return errors.New(strings.Join(s, ",") + " HasError")
+}
+
+//IsDirsExist 文件夹是否存在
+func IsDirsExist(paths []string, isCreate bool) (err error) {
+	s := []string{}
+	for _, fname := range paths {
+		fi, err := os.Stat(path)
+		if err == nil && fi.IsDir() {
+			continue
+		}
+		if isCreate {
+			err = os.MkdirAll(fname, os.ModePerm)
+			if err != nil {
+				s = append(s, fname)
+			}
+		} else {
+			s = append(s, fname)
+		}
+	}
+	if len(s) == 0 {
+		return nil
+	}
+	return errors.New(strings.Join(s, ",") + " HasError")
 }
 
 // CsvWriteALL 生成CSV
@@ -80,6 +109,23 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 	wcsv.WriteAll(data)
 	wcsv.Flush()
 
+	return nil
+}
+
+// CsvWriteALL 生成CSV
+func CsvWriteFile(data [][]string, wfile string, comma string) error {
+
+	file, err := os.Create(wfile)
+	if err != nil {
+		return err
+	}
+	bb := bufio.NewWriter(file)
+	for v := range data {
+		bb.WriteString(strings.Join(data[v], comma))
+		bb.WriteRune('\n')
+	}
+	bb.Flush()
+	file.Close()
 	return nil
 }
 
