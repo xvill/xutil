@@ -61,7 +61,7 @@ func FilePatternLinesCount(fexp string, delim byte) (count int, detail map[strin
 func IsFilesExist(paths []string) (err error) {
 	s := []string{}
 	for _, fname := range paths {
-		fi, err := os.Stat(path)
+		fi, err := os.Stat(fname)
 		if err == nil && !fi.IsDir() {
 			continue
 		} else {
@@ -78,7 +78,7 @@ func IsFilesExist(paths []string) (err error) {
 func IsDirsExist(paths []string, isCreate bool) (err error) {
 	s := []string{}
 	for _, fname := range paths {
-		fi, err := os.Stat(path)
+		fi, err := os.Stat(fname)
 		if err == nil && fi.IsDir() {
 			continue
 		}
