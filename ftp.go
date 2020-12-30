@@ -78,6 +78,9 @@ func (c XFtp) NameList() (ftpfiles []string) {
 
 func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
+	if len(files) == 0 {
+		return
+	}
 	if c.LocalFilePrefix != "" {
 		err = IsDirsExist([]string{c.LocalFilePrefix}, false)
 		if err == nil {
