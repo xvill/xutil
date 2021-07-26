@@ -20,7 +20,7 @@ func ColFloat64(raw, fields, oper string) (ret float64) {
 	if len(dat) == 0 {
 		return
 	}
-	switch oper {
+	switch strings.ToUpper(oper) {
 	case "SUM":
 		ret = SumFloat64(dat)
 	case "MAX":
