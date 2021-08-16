@@ -66,3 +66,33 @@ func SubString(str string, begin, length int) (substr string) {
 	}
 	return string(rs[begin:end])
 }
+
+//StringsUniq 去重
+func StringsUniq(s1 []string) []string {
+	s := make([]string, 0)
+	smap := make(map[string]struct{}, 0)
+	for _, v := range s1 {
+		if _, exists := smap[v]; !exists {
+			s = append(s, v)
+			smap[v] = struct{}{}
+		}
+	}
+	return s
+}
+
+// StringsReverse reverses an array of string
+func StringsReverse(s []string) []string {
+	for i, j := 0, len(s)-1; i < len(s)/2; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
+// StringReverse reverses a string
+func StringReverse(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
+}
