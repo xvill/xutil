@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,7 +17,7 @@ type XSFtp struct {
 	Addr            string
 	User            string
 	Pwd             string
-	FilePattern     string
+	FilePattern     []string
 	LocalFilePrefix string
 	SSH             *ssh.Client
 	SFTP            *sftp.Client
@@ -104,20 +103,31 @@ func (c *XSFtp) Cmd(cmd string) (stdout, stderr string) {
 
 // ------------------------------------------------------------------------------
 func (c *XSFtp) NameList() (ftpfiles []string) {
-	fdir := filepath.Dir(c.FilePattern)
-	walker := c.SFTP.Walk(fdir)
-	for walker.Step() {
-		if err := walker.Err(); err != nil {
-			log.Println(err)
-			continue
-		}
-		fname := filepath.Join(fdir, walker.Stat().Name())
-		if ok, _ := filepath.Match(c.FilePattern, fname); ok {
-			ftpfiles = append(ftpfiles, fname)
-		}
+	for _, fpattern := range c.FilePattern {
+		fs, _ := c.SFTP.Glob(fpattern)
+		ftpfiles = append(ftpfiles, fs...)
 	}
 	return ftpfiles
 }
+
+// func (c *XSFtp) NameList() (ftpfiles []string) {
+// 	for _, fpattern := range c.FilePattern {
+// 		fdir := filepath.Dir(fpattern)
+// 		walker := c.SFTP.Walk(fdir)
+// 		for walker.Step() {
+// 			if err := walker.Err(); err != nil {
+// 				log.Println(err)
+// 				continue
+// 			}
+// 			fname := filepath.Join(fdir, walker.Stat().Name())
+// 			if ok, _ := filepath.Match(fpattern, fname); ok {
+// 				ftpfiles = append(ftpfiles, fname)
+// 			}
+// 		}
+// 	}
+
+// 	return ftpfiles
+// }
 
 func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	dat = make(map[string]string, 0)
