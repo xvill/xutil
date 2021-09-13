@@ -3,6 +3,7 @@ package xutil
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -16,7 +17,7 @@ type XFtp struct {
 	User            string
 	Pwd             string
 	PASV            string
-	FilePattern     string
+	FilePattern     []string
 	LocalFilePrefix string
 	Conn            *ftp4go.FTP
 }
@@ -59,19 +60,56 @@ func (c XFtp) MKdir(path string) {
 	return
 }
 
-func (c XFtp) NameList() (ftpfiles []string) {
-	xdir, xfile := filepath.Split(c.FilePattern)
-	files, err := c.Conn.Nlst(xdir)
+func (c XFtp) Size(path string) int64 {
+	size, err := c.Conn.Size(path)
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		return 0
 	}
+	return int64(size)
+}
 
-	for _, v := range files {
-		v = filepath.Base(v)
-		if ok, _ := filepath.Match(xfile, v); ok {
-			ftpfiles = append(ftpfiles, filepath.Join(xdir, v))
+func (c XFtp) NameList() (ftpfiles []string) {
+	for _, fpattern := range c.FilePattern {
+
+		fpaths := strings.Split(fpattern, "/")
+
+		fdirs := []string{}
+		fmaps := make(map[string][]string, 0)
+		for i, fpath := range fpaths {
+			if strings.Contains(fpath, "*") {
+				fp := strings.Join(fpaths[0:i+1], "/")
+				fmaps[fp] = []string{}
+				fdirs = append(fdirs, fp)
+			}
 		}
+
+		files, _ := c.Conn.Nlst(fdirs[0])
+		fmaps[fdirs[0]] = files
+
+		for i, nowpath := range fdirs[1:] {
+			lastpath := fdirs[i]
+			xfdir := strings.ReplaceAll(nowpath, lastpath, "")
+			for _, fpath := range fmaps[lastpath] {
+				xfpath := filepath.Join(fpath, xfdir)
+				xfiles, _ := c.Conn.Nlst(xfpath)
+				fmaps[nowpath] = append(fmaps[nowpath], xfiles...)
+			}
+		}
+		nowfiles := fmaps[fdirs[len(fdirs)-1]]
+		ftpfiles = append(ftpfiles, nowfiles...)
+		// xdir, xfile := filepath.Split(fpattern)
+		// files, err := c.Conn.Nlst(xdir)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return nil
+		// }
+
+		// for _, v := range files {
+		// 	v = filepath.Base(v)
+		// 	if ok, _ := filepath.Match(xfile, v); ok {
+		// 		ftpfiles = append(ftpfiles, filepath.Join(xdir, v))
+		// 	}
+		// }
 	}
 	return ftpfiles
 }
@@ -97,10 +135,14 @@ func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 		}
 		localpath := c.LocalFilePrefix + filepath.Base(file)
 		fmt.Println("DownloadFile " + file + " to " + localpath)
-		err = c.Conn.DownloadFile(file, localpath, false)
+		blockSize := 819200
+		f, err := os.OpenFile(localpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		err = c.Conn.GetBytes(ftp4go.RETR_FTP_CMD, f, blockSize, file)
+		// err = c.Conn.DownloadFile(file, localpath, false)
 		if err != nil {
 			return dat, err
 		}
+		f.Close()
 		dat[file] = localpath
 	}
 	fmt.Println("DownloadFiles end")
@@ -134,7 +176,7 @@ func (c *XFtp) UploadFiles(files map[string]string, useLineMode bool) (retInfo m
 }
 
 //GetFTPFiles 获取 FTP/SFTP 匹配的文件
-func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string, expectfiles []string) (files map[string]string, err error) {
+func GetFTPFiles(ftptype, addr, user, pwd, pasv, localfileprefix string, pattern []string, expectfiles []string) (files map[string]string, err error) {
 
 	ftpfiles := make([]string, 0)
 	var xftp XFtp
@@ -150,7 +192,6 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string
 			FilePattern:     pattern,
 			LocalFilePrefix: localfileprefix}
 
-		log.Println(xftp.FilePattern, filepath.Dir(xftp.FilePattern))
 		err = xftp.Connect()
 		if err != nil {
 			log.Println(err)
@@ -165,7 +206,6 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string
 			FilePattern:     pattern,
 			LocalFilePrefix: localfileprefix}
 
-		log.Println(xsftp.FilePattern, filepath.Dir(xsftp.FilePattern))
 		err = xsftp.Connect()
 		if err != nil {
 			log.Println(err)
@@ -184,6 +224,7 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, pattern, localfileprefix string
 		return
 	}
 
+	getftpfiles = StringsUniq(getftpfiles)
 	for i := range getftpfiles {
 		getftpfiles[i] = strings.TrimPrefix(getftpfiles[i], "["+addr+"]")
 	}
