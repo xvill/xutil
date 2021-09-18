@@ -81,6 +81,49 @@ func DayLastRange(f string) (ret []string) {
 	return
 }
 
+func TimeParse(s string) (t time.Time, err error) {
+	slen := len(s)
+	if strings.Contains(s, "-") {
+		if !strings.Contains(s, "T") {
+			switch slen {
+			case 10:
+				t, err = time.Parse("2006-01-02", s)
+			case 13:
+				t, err = time.Parse("2006-01-02 15", s)
+			case 16:
+				t, err = time.Parse("2006-01-02 15:04", s)
+			default:
+				t, err = time.Parse("2006-01-02 15:04:05", s)
+			}
+		} else {
+			switch slen {
+			case 13:
+				t, err = time.Parse("2006-01-02T15", s)
+			case 16:
+				t, err = time.Parse("2006-01-02T15:04", s)
+			default:
+				t, err = time.Parse("2006-01-02T15:04:05", s)
+			}
+		}
+	} else {
+		switch slen {
+		case 8:
+			t, err = time.Parse("20060102", s)
+		case 10:
+			t, err = time.Parse("2006010215", s)
+		case 12:
+			t, err = time.Parse("200601021504", s)
+		case 13:
+			t, err = time.Parse("20060102.1504", s)
+		case 15:
+			t, err = time.Parse("20060102.150405", s)
+		default:
+			t, err = time.Parse("20060102150405", s)
+		}
+	}
+	return
+}
+
 func TimeFormat(f string, t ...time.Time) (ret []string) {
 	for _, v := range t {
 		ret = append(ret, v.Format(f))
