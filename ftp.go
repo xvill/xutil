@@ -78,11 +78,10 @@ func (c XFtp) InfoList() (ftpfiles []string) {
 func (c XFtp) FileList(CMD string) (ftpfiles []string) {
 	for _, fpattern := range c.FilePattern {
 		nowfiles := []string{}
-		if strings.Contains(fpattern, "*") {
-			fpaths := strings.Split(fpattern, "/")
-
+		if strings.Contains(filepath.Dir(fpattern), "*") {
 			fdirs := []string{}
 			fmaps := make(map[string][]string, 0)
+			fpaths := strings.Split(fpattern, "/")
 			for i, fpath := range fpaths {
 				if strings.Contains(fpath, "*") {
 					fp := strings.Join(fpaths[0:i+1], "/")
@@ -100,22 +99,29 @@ func (c XFtp) FileList(CMD string) (ftpfiles []string) {
 			}
 			fmaps[fdirs[0]] = files
 
-			for i, nowpath := range fdirs[1:] {
+			for i, nowpath := range fdirs[1 : len(fdirs)-1] {
 				lastpath := fdirs[i]
 				xfdir := strings.ReplaceAll(nowpath, lastpath, "")
 				for _, fpath := range fmaps[lastpath] {
-					xfpath := filepath.Join(fpath, xfdir)
-					xfiles, _ := c.Conn.Nlst(xfpath)
+					xfiles, _ := c.Conn.Nlst(filepath.Join(fpath, xfdir))
 					fmaps[nowpath] = append(fmaps[nowpath], xfiles...)
 				}
 			}
-			nowfiles = fmaps[fdirs[len(fdirs)-1]]
+			lastpath := fdirs[len(fdirs)-1]
+			lastPathDir := filepath.Dir(lastpath)
+			lastPathBase := filepath.Base(lastpath)
+			for _, fpath := range fmaps[lastPathDir] {
+				nowfiles = append(nowfiles, filepath.Join(fpath, lastPathBase))
+			}
 		} else {
 			nowfiles = []string{fpattern}
 		}
 
 		if CMD == "NLST" {
-			ftpfiles = append(ftpfiles, nowfiles...)
+			for _, v := range nowfiles {
+				xfiles, _ := c.Conn.Nlst(v)
+				ftpfiles = append(ftpfiles, xfiles...)
+			}
 		} else if CMD == "LIST" {
 			for _, v := range nowfiles {
 				xdir := filepath.Dir(v)
