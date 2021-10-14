@@ -69,47 +69,63 @@ func (c XFtp) Size(path string) int64 {
 }
 
 func (c XFtp) NameList() (ftpfiles []string) {
+	return c.FileList("NLST")
+}
+func (c XFtp) InfoList() (ftpfiles []string) {
+	return c.FileList("LIST")
+}
+
+func (c XFtp) FileList(CMD string) (ftpfiles []string) {
 	for _, fpattern := range c.FilePattern {
+		nowfiles := []string{}
+		if strings.Contains(fpattern, "*") {
+			fpaths := strings.Split(fpattern, "/")
 
-		fpaths := strings.Split(fpattern, "/")
-
-		fdirs := []string{}
-		fmaps := make(map[string][]string, 0)
-		for i, fpath := range fpaths {
-			if strings.Contains(fpath, "*") {
-				fp := strings.Join(fpaths[0:i+1], "/")
-				fmaps[fp] = []string{}
-				fdirs = append(fdirs, fp)
+			fdirs := []string{}
+			fmaps := make(map[string][]string, 0)
+			for i, fpath := range fpaths {
+				if strings.Contains(fpath, "*") {
+					fp := strings.Join(fpaths[0:i+1], "/")
+					fmaps[fp] = []string{}
+					fdirs = append(fdirs, fp)
+				}
 			}
+			if len(fdirs) == 0 {
+				continue
+			}
+
+			files, err := c.Conn.Nlst(fdirs[0])
+			if err != nil {
+				continue
+			}
+			fmaps[fdirs[0]] = files
+
+			for i, nowpath := range fdirs[1:] {
+				lastpath := fdirs[i]
+				xfdir := strings.ReplaceAll(nowpath, lastpath, "")
+				for _, fpath := range fmaps[lastpath] {
+					xfpath := filepath.Join(fpath, xfdir)
+					xfiles, _ := c.Conn.Nlst(xfpath)
+					fmaps[nowpath] = append(fmaps[nowpath], xfiles...)
+				}
+			}
+			nowfiles = fmaps[fdirs[len(fdirs)-1]]
+		} else {
+			nowfiles = []string{fpattern}
 		}
 
-		files, _ := c.Conn.Nlst(fdirs[0])
-		fmaps[fdirs[0]] = files
-
-		for i, nowpath := range fdirs[1:] {
-			lastpath := fdirs[i]
-			xfdir := strings.ReplaceAll(nowpath, lastpath, "")
-			for _, fpath := range fmaps[lastpath] {
-				xfpath := filepath.Join(fpath, xfdir)
-				xfiles, _ := c.Conn.Nlst(xfpath)
-				fmaps[nowpath] = append(fmaps[nowpath], xfiles...)
+		if CMD == "NLST" {
+			ftpfiles = append(ftpfiles, nowfiles...)
+		} else if CMD == "LIST" {
+			for _, v := range nowfiles {
+				xdir := filepath.Dir(v)
+				xfiles, _ := c.Conn.Dir(v)
+				for _, e := range xfiles {
+					ls := ParsrLS(e)
+					ftpfiles = append(ftpfiles, xdir+"/"+strings.Join(ls, ","))
+				}
 			}
 		}
-		nowfiles := fmaps[fdirs[len(fdirs)-1]]
-		ftpfiles = append(ftpfiles, nowfiles...)
-		// xdir, xfile := filepath.Split(fpattern)
-		// files, err := c.Conn.Nlst(xdir)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	return nil
-		// }
-
-		// for _, v := range files {
-		// 	v = filepath.Base(v)
-		// 	if ok, _ := filepath.Match(xfile, v); ok {
-		// 		ftpfiles = append(ftpfiles, filepath.Join(xdir, v))
-		// 	}
-		// }
 	}
 	return ftpfiles
 }
@@ -241,4 +257,38 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, localfileprefix string, pattern
 		files[fmt.Sprintf("[%s]%s", addr, ftpfile)] = localfile
 	}
 	return
+}
+
+func ParsrLS(s string) (fileInfo []string) {
+	//"drwxrwxr-x    5 577      554          4096 May 10  2019 pm",
+	//"-rwxrwxrwx    1 501      510       5102081 Oct 09 17:23 pmchk.out",
+	var fileName, fileType, fileSize, fileTime string
+	arr := strings.Fields(s)
+	if len(arr) != 9 {
+		return
+	}
+	fileName, fileSize = arr[8], arr[4]
+	fileTime = strings.Join(arr[5:8], " ")
+	if strings.Contains(arr[7], ":") {
+		t, err := time.Parse("Jan 02 15:04", fileTime)
+		if err == nil {
+			fileTime = t.AddDate(time.Now().Year(), 0, 0).Format("2006-01-02 15:04")
+		}
+	} else {
+		t, err := time.Parse("Jan 02 2006", fileTime)
+		if err == nil {
+			fileTime = t.Format("2006-01-02 15:04")
+		}
+	}
+	switch arr[0][0] {
+	case '-':
+		fileType = "file"
+	case 'd':
+		fileType = "folder"
+	case 'l':
+		fileType = "link"
+	default:
+		fileType = ""
+	}
+	return []string{fileName, fileType, fileSize, fileTime}
 }
