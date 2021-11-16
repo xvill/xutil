@@ -120,6 +120,10 @@ func (c XFtp) FileList(CMD string) (ftpfiles []string) {
 		if CMD == "NLST" {
 			for _, v := range nowfiles {
 				xfiles, _ := c.Conn.Nlst(v)
+				xdir := filepath.Dir(v)
+				for i := range xfiles {
+					xfiles[i] = filepath.Join(xdir, filepath.Base(xfiles[i]))
+				}
 				ftpfiles = append(ftpfiles, xfiles...)
 			}
 		} else if CMD == "LIST" {
