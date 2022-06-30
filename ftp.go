@@ -195,8 +195,8 @@ func (c *XFtp) ConnectAndDownload() (files map[string]string, err error) {
 
 func (c *XFtp) UploadFiles(files map[string]string, useLineMode bool) (retInfo map[string]error) {
 	retInfo = make(map[string]error, 0)
-	for fname, tname := range files {
-		retInfo[fname] = c.Conn.UploadFile(tname, fname, useLineMode, nil)
+	for localname, remotename := range files {
+		retInfo[localname] = c.Conn.UploadFile(remotename, localname, useLineMode, nil)
 	}
 	return
 }
@@ -272,33 +272,42 @@ func GetFTPFiles(ftptype, addr, user, pwd, pasv, localfileprefix string, pattern
 func ParsrLS(s string) (fileInfo []string) {
 	//"drwxrwxr-x    5 577      554          4096 May 10  2019 pm",
 	//"-rwxrwxrwx    1 501      510       5102081 Oct 09 17:23 pmchk.out",
+	// "06-29-22  01:31PM              1383076 NK_Kpi4G_Plmn_202206291315.zip"  --windowsFTP
 	var fileName, fileType, fileSize, fileTime string
 	arr := strings.Fields(s)
-	if len(arr) != 9 {
-		return
-	}
-	fileName, fileSize = arr[8], arr[4]
-	fileTime = strings.Join(arr[5:8], " ")
-	if strings.Contains(arr[7], ":") {
-		t, err := time.Parse("Jan 02 15:04", fileTime)
-		if err == nil {
-			fileTime = t.AddDate(time.Now().Year(), 0, 0).Format("2006-01-02 15:04")
+	if len(arr) == 9 {
+
+		fileName, fileSize = arr[8], arr[4]
+		fileTime = strings.Join(arr[5:8], " ")
+		if strings.Contains(arr[7], ":") {
+			t, err := time.Parse("Jan 02 15:04", fileTime)
+			if err == nil {
+				fileTime = t.AddDate(time.Now().Year(), 0, 0).Format("2006-01-02 15:04")
+			}
+		} else {
+			t, err := time.Parse("Jan 02 2006", fileTime)
+			if err == nil {
+				fileTime = t.Format("2006-01-02 15:04")
+			}
 		}
-	} else {
-		t, err := time.Parse("Jan 02 2006", fileTime)
+		switch arr[0][0] {
+		case '-':
+			fileType = "file"
+		case 'd':
+			fileType = "folder"
+		case 'l':
+			fileType = "link"
+		default:
+			fileType = ""
+		}
+	} else if len(arr) == 4 {
+		t, err := time.Parse("01-02-06 15:04PM", strings.Join(arr[0:2], " "))
 		if err == nil {
 			fileTime = t.Format("2006-01-02 15:04")
 		}
-	}
-	switch arr[0][0] {
-	case '-':
-		fileType = "file"
-	case 'd':
-		fileType = "folder"
-	case 'l':
-		fileType = "link"
-	default:
-		fileType = ""
+		fileType, fileName, fileSize = "file", arr[3], arr[2]
+	} else {
+		return
 	}
 	return []string{fileName, fileType, fileSize, fileTime}
 }
