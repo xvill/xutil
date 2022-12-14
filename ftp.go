@@ -175,6 +175,28 @@ func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 	return dat, nil
 }
 
+func (c XFtp) DownloadFilesMap(files map[string]string) (dat map[string]string, err error) {
+	dat = make(map[string]string, 0)
+	if len(files) == 0 {
+		return
+	}
+	fmt.Println("DownloadFiles begin")
+	for ftpfile, localfile := range files {
+		fmt.Println("DownloadFile " + ftpfile + " to " + localfile)
+		blockSize := 819200
+		f, err := os.OpenFile(localfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		err = c.Conn.GetBytes(ftp4go.RETR_FTP_CMD, f, blockSize, ftpfile)
+		// err = c.Conn.DownloadFile(file, localpath, false)
+		if err != nil {
+			return dat, err
+		}
+		f.Close()
+		dat[ftpfile] = localfile
+	}
+	fmt.Println("DownloadFiles end")
+	return dat, nil
+}
+
 func (c XFtp) Logout() error {
 	_, err := c.Conn.Quit()
 	return err
