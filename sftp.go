@@ -175,6 +175,39 @@ func (c *XSFtp) DownloadFiles(files []string) (dat map[string]string, err error)
 	return dat, nil
 }
 
+func (c *XSFtp) DownloadFilesMap(files map[string]string) (dat map[string]string, err error) {
+	dat = make(map[string]string, 0)
+	if len(files) == 0 {
+		return
+	}
+	fmt.Println("DownloadFiles begin")
+	for ftpfile, localfile := range files {
+		fmt.Println("DownloadFile " + ftpfile + " to " + localfile)
+
+		srcFile, err := c.SFTP.Open(ftpfile)
+		if err != nil {
+			fmt.Println("Open", err)
+			return dat, err
+		}
+
+		raw, err := ioutil.ReadAll(srcFile)
+		if err != nil {
+			fmt.Println("ReadAll", err)
+			return dat, err
+		}
+
+		err = ioutil.WriteFile(localfile, raw, 0666)
+		if err != nil {
+			fmt.Println("WriteFile", err)
+			return dat, err
+		}
+		srcFile.Close()
+		dat[ftpfile] = localfile
+	}
+	fmt.Println("DownloadFiles end")
+	return dat, nil
+}
+
 func (c *XSFtp) UploadFiles(files map[string]string) (retInfo map[string]error) {
 	retInfo = make(map[string]error, 0)
 	for fname, tname := range files {
