@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,11 @@ type XFtp struct {
 	FilePattern     []string
 	LocalFilePrefix string
 	Conn            *ftp4go.FTP
+
+	FtpFilePats []struct {
+		Filepatterns []string `json:"filepatterns"`
+		Info         []string `json:"info"`
+	}
 }
 
 func (c *XFtp) Connect() (err error) {
@@ -166,7 +172,10 @@ func (c XFtp) DownloadFiles(files []string) (dat map[string]string, err error) {
 		err = c.Conn.GetBytes(ftp4go.RETR_FTP_CMD, f, blockSize, file)
 		// err = c.Conn.DownloadFile(file, localpath, false)
 		if err != nil {
-			return dat, err
+			fmt.Println(err)
+			f.Close()
+			os.Remove(localpath) //
+			continue
 		}
 		f.Close()
 		dat[file] = localpath
@@ -219,6 +228,35 @@ func (c *XFtp) UploadFiles(files map[string]string, useLineMode bool) (retInfo m
 	retInfo = make(map[string]error, 0)
 	for localname, remotename := range files {
 		retInfo[localname] = c.Conn.UploadFile(remotename, localname, useLineMode, nil)
+	}
+	return
+}
+
+func FtpDownload(ftptype, addr, user, pwd, pasv, localfileprefix string, ftpfiles []string) (rawftpfiles map[string]string, err error) {
+	var xftp XFtp
+	var xsftp XSFtp
+
+	rawftpfiles = make(map[string]string, 0)
+
+	switch ftptype {
+	case "FTP":
+		xftp = XFtp{Addr: addr, User: user, Pwd: pwd, PASV: pasv, LocalFilePrefix: localfileprefix}
+		err = xftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xftp.Logout()
+		rawftpfiles, err = xftp.DownloadFiles(ftpfiles)
+	case "SFTP":
+		xsftp = XSFtp{Addr: addr, User: user, Pwd: pwd, LocalFilePrefix: localfileprefix}
+		err = xsftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xsftp.Logout()
+		rawftpfiles, err = xsftp.DownloadFiles(ftpfiles)
 	}
 	return
 }
@@ -302,12 +340,12 @@ func ParsrLS(s string) (fileInfo []string) {
 		fileName, fileSize = arr[8], arr[4]
 		fileTime = strings.Join(arr[5:8], " ")
 		if strings.Contains(arr[7], ":") {
-			t, err := time.Parse("Jan 02 15:04", fileTime)
+			t, err := time.Parse("Jan 2 15:04", fileTime)
 			if err == nil {
 				fileTime = t.AddDate(time.Now().Year(), 0, 0).Format("2006-01-02 15:04")
 			}
 		} else {
-			t, err := time.Parse("Jan 02 2006", fileTime)
+			t, err := time.Parse("Jan 2 2006", fileTime)
 			if err == nil {
 				fileTime = t.Format("2006-01-02 15:04")
 			}
@@ -332,4 +370,39 @@ func ParsrLS(s string) (fileInfo []string) {
 		return
 	}
 	return []string{fileName, fileType, fileSize, fileTime}
+}
+
+// FtpFileList 多文件路径匹配 Info->id:文件时间正则 ,结果-> id,文件匹配时间,文件名,文件类型,文件大小,服务器文件时间
+func (c *XFtp) FtpFileList() (loadftpFiles []string) {
+	err := c.Connect()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer c.Logout()
+
+	for _, rfile := range c.FtpFilePats {
+		c.FilePattern = rfile.Filepatterns
+		rawftpfiles := c.InfoList()
+
+		for _, ids := range rfile.Info {
+			id := strings.Split(ids, ":")
+			if len(id) != 2 {
+				continue
+			}
+			rege := regexp.MustCompile(id[1])
+			for _, ftpfile := range rawftpfiles {
+				reg := rege.FindStringSubmatch(strings.Split(ftpfile, ",")[0])
+				if len(reg) == 2 {
+					dtime, err := TimeParse(reg[1])
+					if err != nil {
+						loadftpFiles = append(loadftpFiles, fmt.Sprintf("%s,%s,%s", id[0], "", ftpfile))
+					} else {
+						loadftpFiles = append(loadftpFiles, fmt.Sprintf("%s,%s,%s", id[0], dtime.Format("2006-01-02 15:04:05"), ftpfile))
+					}
+				}
+			}
+		}
+	}
+	return
 }
