@@ -114,7 +114,6 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 
 // CsvWriteALL 生成CSV
 func CsvWriteFile(data [][]string, wfile string, comma string) error {
-
 	file, err := os.Create(wfile)
 	if err != nil {
 		return err
@@ -127,6 +126,66 @@ func CsvWriteFile(data [][]string, wfile string, comma string) error {
 	bb.Flush()
 	file.Close()
 	return nil
+}
+
+func SkipBOM(rc io.Reader) (newFile []byte, err error) {
+	// file, err := ioutil.ReadFile(filename)
+	file, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return nil, err
+	}
+	if len(file) >= 4 && isUTF32BigEndianBOM4(file) {
+
+		return file[4:], nil
+	}
+	if len(file) >= 4 && isUTF32LittleEndianBOM4(file) {
+		return file[4:], nil
+	}
+	if len(file) > 2 && isUTF8BOM3(file) {
+		return file[3:], nil
+	}
+	if len(file) == 2 && isUTF16BigEndianBOM2(file) {
+		return file[2:], nil
+	}
+	if len(file) == 2 && isUTF16LittleEndianBOM2(file) {
+		return file[2:], nil
+	}
+	return file, nil
+}
+
+func isUTF32BigEndianBOM4(buf []byte) bool {
+	if len(buf) < 4 {
+		return false
+	}
+	return buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0xFE && buf[3] == 0xFF
+}
+
+func isUTF32LittleEndianBOM4(buf []byte) bool {
+	if len(buf) < 4 {
+		return false
+	}
+	return buf[0] == 0xFF && buf[1] == 0xFE && buf[2] == 0x00 && buf[3] == 0x00
+}
+
+func isUTF8BOM3(buf []byte) bool {
+	if len(buf) < 3 {
+		return false
+	}
+	return buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF
+}
+
+func isUTF16BigEndianBOM2(buf []byte) bool {
+	if len(buf) < 2 {
+		return false
+	}
+	return buf[0] == 0xFE && buf[1] == 0xFF
+}
+
+func isUTF16LittleEndianBOM2(buf []byte) bool {
+	if len(buf) < 2 {
+		return false
+	}
+	return buf[0] == 0xFF && buf[1] == 0xFE
 }
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -329,6 +388,19 @@ func linkcopy(src, dest string, info os.FileInfo) error {
 		return err
 	}
 	return os.Symlink(src, dest)
+}
+
+func FileHead(fanme, field string) []string {
+	f, err := os.Open(fanme)
+	if err != nil {
+		return []string{}
+	}
+	defer f.Close()
+
+	bs := bufio.NewScanner(f)
+	bs.Scan()
+	head := strings.Split(bs.Text(), field)
+	return head
 }
 
 //---------------------------------------------------------------------
