@@ -1,5 +1,48 @@
 package xutil
 
+import (
+	"strconv"
+	"strings"
+)
+
+//StringsContains
+func IntsIndex(s1 []int, s int) int {
+	for i, v := range s1 {
+		if v == s {
+			return i
+		}
+	}
+	return -1
+}
+
+//StringsIndex
+func StringsIndex(s1 []string, s string) int {
+	for i, v := range s1 {
+		if v == s {
+			return i
+		}
+	}
+	return -1
+}
+
+//StringsLower
+func StringsLower(s1 []string) []string {
+	s := make([]string, len(s1))
+	for i, v := range s1 {
+		s[i] = strings.ToLower(v)
+	}
+	return s
+}
+
+//StringsUpper
+func StringsUpper(s1 []string) []string {
+	s := make([]string, len(s1))
+	for i, v := range s1 {
+		s[i] = strings.ToUpper(v)
+	}
+	return s
+}
+
 //StringsMinus 差集s1-s2
 func StringsMinus(s1, s2 []string) []string {
 	smap := make(map[string]int, 0)
@@ -95,4 +138,41 @@ func StringReverse(s string) string {
 		r[i], r[j] = r[j], r[i]
 	}
 	return string(r)
+}
+
+func StringsToInt(arr []string) (dat []int) {
+	dat = make([]int, len(arr))
+	for i := 0; i < len(arr); i++ {
+		f, err := strconv.Atoi(arr[i])
+		if err != nil {
+			continue
+		}
+		dat[i] = f
+	}
+	return
+}
+
+func StringsToFloat64(arr []string) (dat []float64) {
+	dat = make([]float64, len(arr))
+	for i := 0; i < len(arr); i++ {
+		f, err := strconv.ParseFloat(arr[i], 64)
+		if err != nil {
+			// fmt.Println(raw, err.Error())
+			continue
+		}
+		dat[i] = f
+	}
+	return
+}
+
+func StringsToFloat64NoEmpty(arr []string) (dat []float64) {
+	for i := 0; i < len(arr); i++ {
+		f, err := strconv.ParseFloat(arr[i], 64)
+		if err != nil {
+			// fmt.Println(raw, err.Error())
+			continue
+		}
+		dat = append(dat, f)
+	}
+	return
 }
