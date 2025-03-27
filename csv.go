@@ -292,8 +292,7 @@ func RowKVind(row []string, kv map[string]string, outhead []string) (outind []in
 			colmap[strings.ToLower(col)] = i
 		}
 	}
-	fmt.Printf("colmap %v\n", colmap)
-
+	
 	for _, newcol := range outhead {
 		if ind, exist := colmap[strings.ToLower(newcol)]; exist {
 			outind = append(outind, ind)
