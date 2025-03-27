@@ -84,6 +84,7 @@ func (c *CSVTools) ParseZip() {
 		mutex       sync.Mutex          // 新增互斥锁
 		processFile func(i interface{}) // 定义处理单个文件的函数
 	)
+	var inputInfoMap sync.Map
 
 	processFile = func(i interface{}) {
 		defer wg.Done()
@@ -136,7 +137,8 @@ func (c *CSVTools) ParseZip() {
 		fsize := fmt.Sprintf("%d", fileInfo.Size())
 		fctime := fileInfo.ModTime().Format("2006-01-02T15:04:05")
 		fcnt := fmt.Sprintf("%d", len(lines))
-		c.InputInfo[fileName] = []string{fctime, fsize, fcnt} // 记录文件信息
+		inputInfoMap.Store(fileName, []string{fctime, fsize, fcnt})
+		// c.InputInfo[fileName] = []string{fctime, fsize, fcnt} // 记录文件信息
 
 		// 合并数据并处理值
 		if len(lines) > 0 {
@@ -195,6 +197,13 @@ func (c *CSVTools) ParseZip() {
 
 	// 等待所有任务完成
 	wg.Wait()
+
+	inputInfoMap.Range(func(key, value interface{}) bool {
+		fname := key.(string)
+		finfo := value.([]string)
+		c.InputInfo[fname] = finfo
+		return true
+	})
 
 	// 计算输出文件的总行数和列头
 	if len(allData) > 1 {
@@ -292,7 +301,8 @@ func RowKVind(row []string, kv map[string]string, outhead []string) (outind []in
 			colmap[strings.ToLower(col)] = i
 		}
 	}
-	
+	fmt.Printf("colmap %v\n", colmap)
+
 	for _, newcol := range outhead {
 		if ind, exist := colmap[strings.ToLower(newcol)]; exist {
 			outind = append(outind, ind)
@@ -323,8 +333,8 @@ func RowsKVFile(rawdat [][]string, kv map[string]string, outhead []string, oname
 	if !sameHeaders {
 		outind = RowKVind(rawdat[0], kv, outhead)
 	}
-	fmt.Println(rawdat[0], kv, outhead)
-	fmt.Println(outind)
+	// fmt.Println(rawdat[0], kv, outhead)
+	// fmt.Println(outind)
 
 	// 写入文件
 	f, err := os.Create(oname)
