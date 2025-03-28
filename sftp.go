@@ -239,12 +239,13 @@ func (c *XSFtp) DownloadFilesMap(files map[string]string) (dat map[string]string
 func (c *XSFtp) UploadFiles(files map[string]string) (retInfo map[string]error) {
 	retInfo = make(map[string]error, 0)
 	for localname, remotename := range files {
+		tmpname := remotename + ".tmp"
 		srcFile, err := os.Open(localname)
 		retInfo[localname] = err
 		if err != nil {
 			continue
 		}
-		dstFile, err := c.SFTP.Create(remotename)
+		dstFile, err := c.SFTP.Create(tmpname)
 		retInfo[localname] = err
 		if err != nil {
 			continue
@@ -257,6 +258,8 @@ func (c *XSFtp) UploadFiles(files map[string]string) (retInfo map[string]error) 
 		if err != nil {
 			continue
 		}
+		retInfo[localname] = c.SFTP.Rename(tmpname, remotename)
+
 	}
 	return
 }
