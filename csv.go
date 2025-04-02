@@ -59,7 +59,7 @@ func (c *CSVTools) init() {
 			fmt.Printf("文件 %s 处理失败: %v\n", fileName, err)
 		}
 	}
-	if c.FileHeadKeep != "fase" {
+	if c.FileHeadKeep != "false" {
 		c.FileHeadKeep = "true"
 	}
 	if len(c.ColsKV) == 0 && len(c.FileCols) > 0 {
