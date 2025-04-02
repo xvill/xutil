@@ -3,7 +3,6 @@ package xutil
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -241,23 +240,34 @@ func (c *XSFtp) UploadFiles(files map[string]string) (retInfo map[string]error) 
 	for localname, remotename := range files {
 		tmpname := remotename + ".tmp"
 		srcFile, err := os.Open(localname)
-		retInfo[localname] = err
 		if err != nil {
+			retInfo[localname] = err
+			fmt.Println("os.Open :", localname, err)
 			continue
 		}
+		defer srcFile.Close()
+
 		dstFile, err := c.SFTP.Create(tmpname)
-		retInfo[localname] = err
 		if err != nil {
+			retInfo[localname] = err
+			fmt.Println("sftpClient.Create :", tmpname, err)
 			continue
 		}
-		buf := make([]byte, 1024)
-		_, err = io.CopyBuffer(dstFile, srcFile, buf)
-		srcFile.Close()
-		dstFile.Close()
-		retInfo[localname] = err
+		defer dstFile.Close()
+
+		ff, err := ioutil.ReadAll(srcFile)
 		if err != nil {
+			retInfo[localname] = err
+			fmt.Println("ReadAll :", localname, err)
 			continue
 		}
+		size, err := dstFile.Write(ff)
+		if err != nil {
+			retInfo[localname] = err
+			fmt.Println("Write :", localname, tmpname, size, err)
+			continue
+		}
+
 		retInfo[localname] = c.SFTP.Rename(tmpname, remotename)
 
 	}
