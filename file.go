@@ -114,14 +114,19 @@ func CsvWriteALL(data [][]string, wfile string, comma rune) error {
 
 // CsvWriteALL 生成CSV
 func CsvWriteFile(data [][]string, wfile string, comma string) error {
+	return CsvWriteFileAll(data, wfile, comma, "\n")
+}
+
+// CsvWriteFileAll 生成CSV
+func CsvWriteFileAll(data [][]string, wfile string, field, linefield string) error {
 	file, err := os.Create(wfile)
 	if err != nil {
 		return err
 	}
 	bb := bufio.NewWriter(file)
 	for v := range data {
-		bb.WriteString(strings.Join(data[v], comma))
-		bb.WriteRune('\n')
+		bb.WriteString(strings.Join(data[v], field))
+		bb.WriteString(linefield)
 	}
 	bb.Flush()
 	file.Close()
@@ -402,5 +407,3 @@ func FileHead(fanme, field string) []string {
 	head := strings.Split(bs.Text(), field)
 	return head
 }
-
-//---------------------------------------------------------------------
