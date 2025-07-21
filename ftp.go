@@ -224,107 +224,18 @@ func (c *XFtp) ConnectAndDownload() (files map[string]string, err error) {
 	return files, nil
 }
 
-func (c *XFtp) UploadFiles(files map[string]string, useLineMode bool) (retInfo map[string]error) {
+func (c *XFtp) UploadFiles(files map[string]string, useLineMode, usetmp bool) (retInfo map[string]error) {
 	retInfo = make(map[string]error, 0)
 	for localname, remotename := range files {
-		retInfo[localname] = c.Conn.UploadFile(remotename, localname, useLineMode, nil)
-	}
-	return
-}
-
-func FtpDownload(ftptype, addr, user, pwd, pasv, localfileprefix string, ftpfiles []string) (rawftpfiles map[string]string, err error) {
-	var xftp XFtp
-	var xsftp XSFtp
-
-	rawftpfiles = make(map[string]string, 0)
-
-	switch ftptype {
-	case "FTP":
-		xftp = XFtp{Addr: addr, User: user, Pwd: pwd, PASV: pasv, LocalFilePrefix: localfileprefix}
-		err = xftp.Connect()
-		if err != nil {
-			log.Println(err)
-			return
+		tmpfile := remotename
+		if usetmp {
+			tmpfile = remotename + ".tmp"
 		}
-		defer xftp.Logout()
-		rawftpfiles, err = xftp.DownloadFiles(ftpfiles)
-	case "SFTP":
-		xsftp = XSFtp{Addr: addr, User: user, Pwd: pwd, LocalFilePrefix: localfileprefix}
-		err = xsftp.Connect()
-		if err != nil {
-			log.Println(err)
-			return
+		err := c.Conn.UploadFile(tmpfile, localname, useLineMode, nil)
+		if usetmp && err == nil {
+			_, err = c.Conn.Rename(tmpfile, remotename)
 		}
-		defer xsftp.Logout()
-		rawftpfiles, err = xsftp.DownloadFiles(ftpfiles)
-	}
-	return
-}
-
-//GetFTPFiles 获取 FTP/SFTP 匹配的文件
-func GetFTPFiles(ftptype, addr, user, pwd, pasv, localfileprefix string, pattern []string, expectfiles []string) (files map[string]string, err error) {
-
-	ftpfiles := make([]string, 0)
-	var xftp XFtp
-	var xsftp XSFtp
-	files = make(map[string]string, 0)
-
-	switch ftptype {
-	case "FTP":
-		xftp = XFtp{Addr: addr,
-			User:            user,
-			Pwd:             pwd,
-			PASV:            pasv,
-			FilePattern:     pattern,
-			LocalFilePrefix: localfileprefix}
-
-		err = xftp.Connect()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer xftp.Logout()
-		ftpfiles = xftp.NameList()
-	case "SFTP":
-		xsftp = XSFtp{Addr: addr,
-			User:            user,
-			Pwd:             pwd,
-			FilePattern:     pattern,
-			LocalFilePrefix: localfileprefix}
-
-		err = xsftp.Connect()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer xsftp.Logout()
-		ftpfiles = xsftp.NameList()
-	}
-	// ------------------------------------------------------------------------------
-	for i := range ftpfiles {
-		ftpfiles[i] = fmt.Sprintf("[%s]%s", addr, ftpfiles[i])
-	}
-
-	getftpfiles := StringsMinus(ftpfiles, expectfiles) // 要下载的文件 = FTP文件名 - 已入库的文件
-	if len(getftpfiles) == 0 {                         //没有可下载的文件
-		return
-	}
-
-	getftpfiles = StringsUniq(getftpfiles)
-	for i := range getftpfiles {
-		getftpfiles[i] = strings.TrimPrefix(getftpfiles[i], "["+addr+"]")
-	}
-	// ------------------------------------------------------------------------------
-	xfiles := make(map[string]string, 0)
-	switch ftptype {
-	case "FTP":
-		xfiles, err = xftp.DownloadFiles(getftpfiles)
-	case "SFTP":
-		xfiles, err = xsftp.DownloadFiles(getftpfiles)
-	}
-
-	for ftpfile, localfile := range xfiles {
-		files[fmt.Sprintf("[%s]%s", addr, ftpfile)] = localfile
+		retInfo[localname] = err
 	}
 	return
 }
@@ -403,6 +314,120 @@ func (c *XFtp) FtpFileList() (loadftpFiles []string) {
 				}
 			}
 		}
+	}
+	return
+}
+
+func FtpDownload(ftptype, addr, user, pwd, pasv, localfileprefix string, ftpfiles []string) (rawftpfiles map[string]string, err error) {
+	var xftp XFtp
+	var xsftp XSFtp
+
+	switch ftptype {
+	case "FTP":
+		xftp = XFtp{Addr: addr, User: user, Pwd: pwd, PASV: pasv, LocalFilePrefix: localfileprefix}
+		err = xftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xftp.Logout()
+		return xftp.DownloadFiles(ftpfiles)
+	case "SFTP":
+		xsftp = XSFtp{Addr: addr, User: user, Pwd: pwd, LocalFilePrefix: localfileprefix}
+		err = xsftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xsftp.Logout()
+		return xsftp.DownloadFiles(ftpfiles)
+	}
+	return
+}
+
+func FTPUpload(ftptype, addr, user, pwd, pasv string, putFiles map[string]string) (retinfo map[string]error, err error) {
+	var xftp XFtp
+	var xsftp XSFtp
+
+	switch ftptype {
+	case "FTP":
+		xftp = XFtp{Addr: addr, User: user, Pwd: pwd, PASV: pasv}
+		err = xftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xftp.Logout()
+		retinfo = xsftp.UploadFiles(putFiles)
+	case "SFTP":
+		xsftp = XSFtp{Addr: addr, User: user, Pwd: pwd}
+		err = xsftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xsftp.Logout()
+		retinfo = xftp.UploadFiles(putFiles, false)
+	}
+
+	return retinfo, nil
+}
+
+//GetFTPFiles 获取 FTP/SFTP 匹配的文件
+func GetFTPFiles(ftptype, addr, user, pwd, pasv, localfileprefix string, pattern []string, expectfiles []string) (files map[string]string, err error) {
+
+	ftpfiles := make([]string, 0)
+	var xftp XFtp
+	var xsftp XSFtp
+	files = make(map[string]string, 0)
+
+	switch ftptype {
+	case "FTP":
+		xftp = XFtp{Addr: addr, User: user, Pwd: pwd, PASV: pasv, FilePattern: pattern, LocalFilePrefix: localfileprefix}
+
+		err = xftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xftp.Logout()
+		ftpfiles = xftp.NameList()
+	case "SFTP":
+		xsftp = XSFtp{Addr: addr, User: user, Pwd: pwd, FilePattern: pattern, LocalFilePrefix: localfileprefix}
+
+		err = xsftp.Connect()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer xsftp.Logout()
+		ftpfiles = xsftp.NameList()
+	}
+	// ------------------------------------------------------------------------------
+	for i := range ftpfiles {
+		ftpfiles[i] = fmt.Sprintf("[%s]%s", addr, ftpfiles[i])
+	}
+
+	getftpfiles := StringsMinus(ftpfiles, expectfiles) // 要下载的文件 = FTP文件名 - 已入库的文件
+	if len(getftpfiles) == 0 {                         //没有可下载的文件
+		return
+	}
+
+	getftpfiles = StringsUniq(getftpfiles)
+	for i := range getftpfiles {
+		getftpfiles[i] = strings.TrimPrefix(getftpfiles[i], "["+addr+"]")
+	}
+	// ------------------------------------------------------------------------------
+	xfiles := make(map[string]string, 0)
+	switch ftptype {
+	case "FTP":
+		xfiles, err = xftp.DownloadFiles(getftpfiles)
+	case "SFTP":
+		xfiles, err = xsftp.DownloadFiles(getftpfiles)
+	}
+
+	for ftpfile, localfile := range xfiles {
+		files[fmt.Sprintf("[%s]%s", addr, ftpfile)] = localfile
 	}
 	return
 }
